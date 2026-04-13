@@ -2,6 +2,22 @@
 
 import { TableProperties } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+
+const mockFills = [
+  { timestamp: 2900, side: "BUY", symbol: "TOMATOES", price: 4998.0, quantity: 3 },
+  { timestamp: 3300, side: "BUY", symbol: "TOMATOES", price: 4997.0, quantity: 3 },
+  { timestamp: 3900, side: "SELL", symbol: "TOMATOES", price: 5002.0, quantity: 6 },
+  { timestamp: 4200, side: "BUY", symbol: "TOMATOES", price: 5001.0, quantity: 7 },
+  { timestamp: 5900, side: "SELL", symbol: "EMERALDS", price: 10007.0, quantity: 8 },
+]
 
 export function FillsPanel() {
   return (
@@ -18,9 +34,40 @@ export function FillsPanel() {
           </span>
         </label>
       </div>
-      <div className="flex items-center justify-center rounded-md bg-zinc-50 py-6 text-xs text-zinc-400">
-        No Own Fills At This Tick
-      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="text-[11px]">Timestamp</TableHead>
+            <TableHead className="text-[11px]">Side</TableHead>
+            <TableHead className="text-[11px]">Symbol</TableHead>
+            <TableHead className="text-[11px] text-right">Price</TableHead>
+            <TableHead className="text-[11px] text-right">Quantity</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {mockFills.map((fill, i) => (
+            <TableRow key={i}>
+              <TableCell className="text-xs font-mono">{fill.timestamp}</TableCell>
+              <TableCell>
+                <span
+                  className={`text-xs font-medium ${
+                    fill.side === "BUY" ? "text-emerald-600" : "text-red-500"
+                  }`}
+                >
+                  {fill.side}
+                </span>
+              </TableCell>
+              <TableCell className="text-xs">{fill.symbol}</TableCell>
+              <TableCell className="text-xs font-mono text-right">
+                {fill.price.toLocaleString()}
+              </TableCell>
+              <TableCell className="text-xs font-mono text-right">
+                {fill.quantity}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   )
 }

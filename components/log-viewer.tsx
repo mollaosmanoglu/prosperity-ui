@@ -1,6 +1,6 @@
 "use client"
 
-import { Terminal, Code, Database } from "lucide-react"
+import { Terminal, Code } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 
 export function LogViewer() {
@@ -15,10 +15,6 @@ export function LogViewer() {
           <Code className="size-3.5" />
           Algorithm Logs
         </TabsTrigger>
-        <TabsTrigger value="trader" className="gap-1.5">
-          <Database className="size-3.5" />
-          Trader Data
-        </TabsTrigger>
       </TabsList>
       <TabsContent value="sandbox">
         <div className="rounded-xl bg-zinc-900 p-4 font-mono text-xs text-zinc-400 min-h-[160px]">
@@ -28,11 +24,6 @@ export function LogViewer() {
       <TabsContent value="algorithm">
         <div className="rounded-xl bg-zinc-900 p-4 font-mono text-xs text-zinc-400 min-h-[160px]">
           No algorithm logs available.
-        </div>
-      </TabsContent>
-      <TabsContent value="trader">
-        <div className="rounded-xl bg-zinc-900 p-4 font-mono text-xs text-zinc-400 min-h-[160px]">
-          No trader data available.
         </div>
       </TabsContent>
     </Tabs>

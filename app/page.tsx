@@ -6,12 +6,10 @@ import { Filters } from "@/components/filters"
 import { PriceChart } from "@/components/price-chart"
 import { PnlChart } from "@/components/pnl-chart"
 import { PositionChart } from "@/components/position-chart"
-import { StrategyPanel } from "@/components/strategy-panel"
 import { OrderBook } from "@/components/order-book"
 import { ProductSummary } from "@/components/product-summary"
 import { MarketDynamics } from "@/components/market-dynamics"
 import { FillsPanel } from "@/components/fills-panel"
-import { OrdersPanel } from "@/components/orders-panel"
 import { LogViewer } from "@/components/log-viewer"
 
 export default function Home() {
@@ -31,7 +29,6 @@ export default function Home() {
             <PositionChart />
           </div>
           <div className="space-y-4">
-            <StrategyPanel />
             <OrderBook />
             <ProductSummary />
             <MarketDynamics />
@@ -39,7 +36,6 @@ export default function Home() {
         </div>
 
         <FillsPanel />
-        <OrdersPanel />
         <LogViewer />
       </div>
     </div>
