@@ -1,13 +1,13 @@
 "use client"
 
 import { Info } from "lucide-react"
-import { productSummary } from "@/lib/mock-data"
+import { productSummary, stats } from "@/lib/mock-data"
 
 const rows = [
-  { label: "Position", value: productSummary.position.toString() },
-  { label: "PnL", value: productSummary.pnl.toString() },
-  { label: "Mid Price", value: productSummary.midPrice.toLocaleString() },
-  { label: "Spread", value: productSummary.spread.toFixed(1) },
+  { label: "Position", value: stats.position.toString(), color: stats.position < 0 ? "text-red-500" : stats.position > 0 ? "text-emerald-500" : "" },
+  { label: "PnL", value: stats.emeraldsPnl > 0 ? `+${stats.emeraldsPnl.toLocaleString()}` : stats.emeraldsPnl.toLocaleString(), color: stats.emeraldsPnl > 0 ? "text-emerald-500" : stats.emeraldsPnl < 0 ? "text-red-500" : "" },
+  { label: "Mid Price", value: productSummary.midPrice.toLocaleString(), color: "" },
+  { label: "Spread", value: productSummary.spread.toFixed(1), color: "" },
 ]
 
 export function ProductSummary() {
@@ -24,7 +24,7 @@ export function ProductSummary() {
             className="flex items-center justify-between rounded-md bg-zinc-50 px-2.5 py-1.5"
           >
             <span className="text-[11px] text-zinc-500">{row.label}</span>
-            <span className="text-xs font-mono font-semibold">{row.value}</span>
+            <span className={`text-xs font-mono font-semibold ${row.color}`}>{row.value}</span>
           </div>
         ))}
       </div>

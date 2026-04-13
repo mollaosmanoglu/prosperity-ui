@@ -33,7 +33,7 @@ export default function Home() {
         <StatCards />
         <Filters />
 
-        <div className="grid grid-cols-[1fr_300px] gap-4">
+        <div className="grid grid-cols-[1fr_360px] gap-4">
           <div className="space-y-4">
             <PriceChart />
             <PnlChart />

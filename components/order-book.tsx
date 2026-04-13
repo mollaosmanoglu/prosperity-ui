@@ -85,9 +85,9 @@ export function OrderBook() {
         <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-zinc-100">
           <div className="absolute inset-y-0 left-1/2 w-px bg-zinc-300" />
         </div>
-        <div className="flex justify-between text-[9px] text-zinc-400">
-          <span>Bids Heavy</span>
-          <span>Asks Heavy</span>
+        <div className="flex justify-between text-[8px] font-medium text-zinc-400 uppercase tracking-wider">
+          <span>Bids</span>
+          <span>Asks</span>
         </div>
       </div>
     </div>

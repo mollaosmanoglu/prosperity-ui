@@ -18,7 +18,7 @@ import {
 } from "recharts"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
-import { priceData } from "@/lib/mock-data"
+import { priceData, orderBook } from "@/lib/mock-data"
 
 type ChartView = "prices" | "spread" | "volume"
 
@@ -52,6 +52,70 @@ const TOOLTIP_STYLE = {
   borderRadius: 8,
   border: "1px solid #e4e4e7",
   boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function PriceTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null
+  const data = payload[0]?.payload
+  if (!data) return null
+
+  return (
+    <div className="rounded-lg border border-zinc-200 bg-white px-3 py-2 shadow-md">
+      <p className="text-[10px] font-mono text-zinc-400 mb-1.5">{label}</p>
+      {data.ask != null && (
+        <div className="flex items-center gap-1.5">
+          <span className="size-1.5 rounded-full" style={{ backgroundColor: seriesColors.ask }} />
+          <span className="text-[10px] text-zinc-500">Ask</span>
+          <span className="ml-auto text-[10px] font-mono font-medium">{data.ask.toLocaleString()}</span>
+        </div>
+      )}
+      {data.mid != null && (
+        <div className="flex items-center gap-1.5">
+          <span className="size-1.5 rounded-full" style={{ backgroundColor: seriesColors.mid }} />
+          <span className="text-[10px] text-zinc-500">Mid</span>
+          <span className="ml-auto text-[10px] font-mono font-medium">{data.mid.toLocaleString()}</span>
+        </div>
+      )}
+      {data.bid != null && (
+        <div className="flex items-center gap-1.5">
+          <span className="size-1.5 rounded-full" style={{ backgroundColor: seriesColors.bid }} />
+          <span className="text-[10px] text-zinc-500">Bid</span>
+          <span className="ml-auto text-[10px] font-mono font-medium">{data.bid.toLocaleString()}</span>
+        </div>
+      )}
+      <div className="flex items-center gap-1.5">
+        <span className="size-1.5 rounded-full bg-emerald-400" />
+        <span className="text-[10px] text-zinc-500">Total Bid Volume</span>
+        <span className="ml-auto text-[10px] font-mono font-medium">{orderBook.bids.reduce((s, b) => s + b.size, 0)}</span>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <span className="size-1.5 rounded-full bg-red-400" />
+        <span className="text-[10px] text-zinc-500">Total Ask Volume</span>
+        <span className="ml-auto text-[10px] font-mono font-medium">{orderBook.asks.reduce((s, a) => s + a.size, 0)}</span>
+      </div>
+      {data.buyFill != null && (
+        <>
+          <div className="my-1 border-t border-zinc-100" />
+          <div className="flex items-center gap-1.5">
+            <span className="size-1.5 rounded-full" style={{ backgroundColor: seriesColors.buyFill }} />
+            <span className="text-[10px] font-medium text-emerald-600">BUY</span>
+            <span className="ml-auto text-[10px] font-mono font-medium">@ {data.buyFill.toLocaleString()}</span>
+          </div>
+        </>
+      )}
+      {data.sellFill != null && (
+        <>
+          {data.buyFill == null && <div className="my-1 border-t border-zinc-100" />}
+          <div className="flex items-center gap-1.5">
+            <span className="size-1.5 rounded-full" style={{ backgroundColor: seriesColors.sellFill }} />
+            <span className="text-[10px] font-medium text-red-500">SELL</span>
+            <span className="ml-auto text-[10px] font-mono font-medium">@ {data.sellFill.toLocaleString()}</span>
+          </div>
+        </>
+      )}
+    </div>
+  )
 }
 
 export function PriceChart() {
@@ -100,7 +164,7 @@ export function PriceChart() {
               <CartesianGrid stroke="#f0f0f0" />
               <XAxis dataKey="tick" tick={CHART_TICK} tickLine={false} axisLine={{ stroke: "#e4e4e7" }} />
               <YAxis domain={["auto", "auto"]} tick={CHART_TICK} tickLine={false} axisLine={false} width={50} />
-              <Tooltip contentStyle={TOOLTIP_STYLE} />
+              <Tooltip content={<PriceTooltip />} />
               {show("ask") && <Line isAnimationActive={false} type="monotone" dataKey="ask" stroke={seriesColors.ask} dot={false} strokeWidth={1} />}
               {show("mid") && <Line isAnimationActive={false} type="monotone" dataKey="mid" stroke={seriesColors.mid} dot={false} strokeWidth={1.5} strokeDasharray="4 2" />}
               {show("bid") && <Line isAnimationActive={false} type="monotone" dataKey="bid" stroke={seriesColors.bid} dot={false} strokeWidth={1} />}
