@@ -13,7 +13,7 @@ import {
 } from "recharts"
 import { positionData } from "@/lib/mock-data"
 
-const sampled = positionData.filter((_, i) => i % 4 === 0)
+const sampled = positionData.filter((_, i) => i % 10 === 0)
 
 export function PositionChart() {
   return (
@@ -55,6 +55,7 @@ export function PositionChart() {
             />
             <ReferenceLine y={0} stroke="#a1a1aa" strokeDasharray="3 3" />
             <Line
+              isAnimationActive={false}
               type="monotone"
               dataKey="position"
               stroke="#7c3aed"

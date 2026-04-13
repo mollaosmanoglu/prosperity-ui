@@ -12,7 +12,7 @@ import {
 } from "recharts"
 import { pnlData } from "@/lib/mock-data"
 
-const sampled = pnlData.filter((_, i) => i % 4 === 0)
+const sampled = pnlData.filter((_, i) => i % 10 === 0)
 
 export function PnlChart() {
   return (
@@ -62,6 +62,7 @@ export function PnlChart() {
               }}
             />
             <Line
+              isAnimationActive={false}
               type="monotone"
               dataKey="total"
               stroke="#18181b"
@@ -69,6 +70,7 @@ export function PnlChart() {
               strokeWidth={1.5}
             />
             <Line
+              isAnimationActive={false}
               type="monotone"
               dataKey="emeralds"
               stroke="#10b981"

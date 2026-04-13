@@ -106,7 +106,7 @@ export function TickScrubber() {
       </span>
       <Slider
         value={[tick]}
-        onValueChange={(v: number[]) => { setTick(v[0]); if (playing) stop() }}
+        onValueChange={(v) => { const val = Array.isArray(v) ? v[0] : v; setTick(val); if (playing) stop() }}
         min={0}
         max={MAX_TICK}
         className="flex-1"
