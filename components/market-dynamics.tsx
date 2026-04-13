@@ -1,17 +1,22 @@
 "use client"
 
-import { memo, useMemo } from "react"
+import { memo } from "react"
 import { Info } from "lucide-react"
 import { useDashboard } from "@/lib/dashboard-context"
 
 export const MarketDynamics = memo(function MarketDynamics() {
   const { marketDynamics, selectedProduct } = useDashboard()
 
-  const rows = useMemo(() => [
-    { label: "Volatility", value: marketDynamics.volatility, pct: 0, color: "bg-zinc-400" },
-    { label: "Trade Momentum", value: marketDynamics.tradeMomentum, pct: 50, color: "bg-zinc-400" },
-    { label: "Spread Efficiency", value: marketDynamics.spreadEfficiency, pct: 16, color: "bg-emerald-400" },
-  ], [marketDynamics])
+  // Parse numeric values for bar widths
+  const volNum = parseFloat(marketDynamics.volatility) || 0
+  const momNum = parseFloat(marketDynamics.tradeMomentum) || 0
+  const effNum = parseFloat(marketDynamics.spreadEfficiency) || 0
+
+  const rows = [
+    { label: "Volatility", value: marketDynamics.volatility, pct: Math.min(volNum * 20, 100), color: "bg-zinc-400" },
+    { label: "Trade Momentum", value: marketDynamics.tradeMomentum, pct: Math.min(Math.abs(momNum) * 2, 100), color: "bg-zinc-400" },
+    { label: "Spread Efficiency", value: marketDynamics.spreadEfficiency, pct: Math.min(effNum * 200, 100), color: "bg-emerald-400" },
+  ]
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
@@ -28,7 +33,7 @@ export const MarketDynamics = memo(function MarketDynamics() {
             </div>
             <div className="h-1.5 w-full rounded-full bg-zinc-100">
               <div
-                className={`h-full rounded-full ${row.color}`}
+                className={`h-full rounded-full ${row.color} transition-[width] duration-200 ease-out`}
                 style={{ width: `${Math.max(row.pct, 1)}%` }}
               />
             </div>

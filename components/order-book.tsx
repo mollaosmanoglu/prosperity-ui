@@ -1,11 +1,22 @@
 "use client"
 
-import { memo } from "react"
+import { memo, useMemo } from "react"
 import { BarChart3 } from "lucide-react"
 import { useDashboard } from "@/lib/dashboard-context"
+import { AnimatedNumber } from "@/components/animated-number"
 
 export const OrderBook = memo(function OrderBook() {
   const { orderBook, selectedProduct } = useDashboard()
+
+  // Market pressure: bid volume vs ask volume
+  const { pressure, pressurePct } = useMemo(() => {
+    const totalBid = orderBook.bids.reduce((s, b) => s + b.size, 0)
+    const totalAsk = orderBook.asks.reduce((s, a) => s + a.size, 0)
+    const total = totalBid + totalAsk
+    if (total === 0) return { pressure: 0, pressurePct: 50 }
+    const pct = (totalBid / total) * 100
+    return { pressure: Math.round((pct - 50) * 2) / 100, pressurePct: pct }
+  }, [orderBook])
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
@@ -17,7 +28,7 @@ export const OrderBook = memo(function OrderBook() {
         </div>
         <div className="flex items-center gap-1 text-[10px]">
           <span className="text-zinc-500">SPREAD:</span>
-          <span className="font-mono font-semibold">{orderBook.spread.toFixed(1)}</span>
+          <AnimatedNumber value={orderBook.spread} format={(n) => n.toFixed(1)} className="font-mono font-semibold" />
         </div>
       </div>
 
@@ -38,32 +49,24 @@ export const OrderBook = memo(function OrderBook() {
         </div>
 
         {/* Asks (red side) */}
-        {orderBook.asks.map((level) => (
-          <div key={level.price} className="grid grid-cols-3 gap-1 py-0.5">
+        {orderBook.asks.map((level, i) => (
+          <div key={i} className="grid grid-cols-3 gap-1 py-0.5">
             <span className="text-right" />
-            <span className="text-center text-red-500">
-              {level.price.toLocaleString()}
-            </span>
-            <span className="text-left font-semibold text-red-500">
-              {level.size}
-            </span>
+            <AnimatedNumber value={level.price} format={(n) => Math.round(n).toLocaleString()} className="text-center text-red-500" />
+            <AnimatedNumber value={level.size} format={(n) => Math.round(n).toString()} className="text-left font-semibold text-red-500" />
           </div>
         ))}
 
         {/* Mid */}
         <div className="my-1 border-y border-zinc-100 py-1 text-center text-[10px] text-zinc-400">
-          MID: {orderBook.midPrice.toFixed(1)}
+          MID: <AnimatedNumber value={orderBook.midPrice} format={(n) => n.toFixed(1)} />
         </div>
 
         {/* Bids (green side) */}
-        {orderBook.bids.map((level) => (
-          <div key={level.price} className="grid grid-cols-3 gap-1 py-0.5">
-            <span className="text-right font-semibold text-emerald-500">
-              {level.size}
-            </span>
-            <span className="text-center text-emerald-500">
-              {level.price.toLocaleString()}
-            </span>
+        {orderBook.bids.map((level, i) => (
+          <div key={i} className="grid grid-cols-3 gap-1 py-0.5">
+            <AnimatedNumber value={level.size} format={(n) => Math.round(n).toString()} className="text-right font-semibold text-emerald-500" />
+            <AnimatedNumber value={level.price} format={(n) => Math.round(n).toLocaleString()} className="text-center text-emerald-500" />
             <span className="text-left" />
           </div>
         ))}
@@ -83,10 +86,17 @@ export const OrderBook = memo(function OrderBook() {
             <BarChart3 className="size-3 text-zinc-400" />
             <span className="text-[10px] text-zinc-500">Market Pressure</span>
           </div>
-          <span className="text-[10px] font-mono font-semibold">0.00%</span>
+          <AnimatedNumber value={pressure} format={(n) => `${n.toFixed(2)}%`} className="text-[10px] font-mono font-semibold" />
         </div>
         <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-zinc-100">
           <div className="absolute inset-y-0 left-1/2 w-px bg-zinc-300" />
+          <div
+            className="absolute inset-y-0 bg-emerald-400/60 rounded-full transition-all duration-200 ease-out"
+            style={{
+              left: `${Math.min(pressurePct, 50)}%`,
+              width: `${Math.abs(pressurePct - 50)}%`,
+            }}
+          />
         </div>
         <div className="flex justify-between text-[8px] font-medium text-zinc-400 uppercase tracking-wider">
           <span>Bids</span>

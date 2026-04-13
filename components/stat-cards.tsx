@@ -1,50 +1,56 @@
 "use client"
 
-import { memo, useMemo } from "react"
+import { memo } from "react"
 import { Info, TrendingUp, TrendingDown } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useDashboard } from "@/lib/dashboard-context"
+import { AnimatedNumber } from "@/components/animated-number"
 
 export const StatCards = memo(function StatCards() {
   const { stats } = useDashboard()
 
-  const cards = useMemo(() => [
+  const cards = [
     {
       title: "Total PnL",
-      value: stats.totalPnl.toLocaleString(),
+      value: stats.totalPnl,
+      format: (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 3 }),
       subtitle: "Cumulative",
       trend: "up" as const,
       tooltip: "Total profit and loss across all products",
     },
     {
       title: "Max Drawdown",
-      value: stats.maxDrawdown.toLocaleString(),
+      value: stats.maxDrawdown,
+      format: (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 3 }),
       subtitle: "Peak-to-Trough",
       trend: "down" as const,
       tooltip: "Largest peak-to-trough decline in PnL",
     },
     {
       title: "EMERALDS PnL",
-      value: stats.emeraldsPnl.toLocaleString(),
+      value: stats.emeraldsPnl,
+      format: (n: number) => n.toLocaleString(),
       subtitle: "By Product",
       trend: "up" as const,
       tooltip: "Profit and loss for EMERALDS only",
     },
     {
       title: "Position",
-      value: stats.position.toString(),
+      value: stats.position,
+      format: (n: number) => Math.round(n).toString(),
       subtitle: "Current Inventory",
-      trend: "down" as const,
+      trend: stats.position < 0 ? "down" as const : stats.position > 0 ? "up" as const : null,
       tooltip: "Current net position (positive = long, negative = short)",
     },
     {
       title: "Microprice",
-      value: stats.microprice.toFixed(2),
+      value: stats.microprice,
+      format: (n: number) => n.toFixed(2),
       subtitle: `Mid: ${stats.midPrice.toFixed(1)}`,
       trend: null,
       tooltip: "Size-weighted midpoint price from the order book",
     },
-  ], [stats])
+  ]
 
   return (
     <div className="grid grid-cols-5 gap-3">
@@ -65,9 +71,11 @@ export const StatCards = memo(function StatCards() {
             </Tooltip>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-lg font-bold font-mono tabular-nums">
-              {card.value}
-            </span>
+            <AnimatedNumber
+              value={card.value}
+              format={card.format}
+              className="text-lg font-bold font-mono tabular-nums"
+            />
             {card.trend === "up" && (
               <TrendingUp className="size-4 text-emerald-500" />
             )}

@@ -7,9 +7,6 @@ import {
   getPnlData,
   getPositionData,
   getOrderBook,
-  getStats,
-  getProductSummary,
-  getMarketDynamics,
   type DashboardData,
   type PricePoint,
   type PnlPoint,
@@ -26,9 +23,6 @@ import {
   pnlData as mockPnlData,
   positionData as mockPositionData,
   orderBook as mockOrderBook,
-  stats as mockStats,
-  productSummary as mockProductSummary,
-  marketDynamics as mockMarketDynamics,
   TOTAL_TICKS_COUNT as mockTotalTicks,
 } from "@/lib/mock-data"
 
@@ -48,10 +42,13 @@ interface DashboardContextValue {
   setPlaying: React.Dispatch<React.SetStateAction<boolean>>
   totalTicks: number
 
-  // Derived data
+  // Derived data (sliced to currentTick for rendering, full for Brush range)
   priceData: PricePoint[]
+  priceDataFull: PricePoint[]
   pnlData: PnlPoint[]
+  pnlDataFull: PnlPoint[]
   positionData: PositionPoint[]
+  positionDataFull: PositionPoint[]
   orderBook: OrderBookData
   stats: StatsData
   productSummary: ProductSummaryData
@@ -87,19 +84,31 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const products = data?.products ?? mockProducts
   const totalTicks = data?.timestamps.length ?? mockTotalTicks
 
-  const priceData = useMemo(
+  const priceDataFull = useMemo(
     () => (data ? getPriceData(data, selectedProduct) : mockPriceData),
     [data, selectedProduct],
   )
+  const priceData = useMemo(
+    () => priceDataFull.slice(0, currentTick + 1),
+    [priceDataFull, currentTick],
+  )
 
-  const pnlData = useMemo(
+  const pnlDataFull = useMemo(
     () => (data ? getPnlData(data) : mockPnlData),
     [data],
   )
+  const pnlData = useMemo(
+    () => pnlDataFull.slice(0, currentTick + 1),
+    [pnlDataFull, currentTick],
+  )
 
-  const positionData = useMemo(
+  const positionDataFull = useMemo(
     () => (data ? getPositionData(data, selectedProduct) : mockPositionData),
     [data, selectedProduct],
+  )
+  const positionData = useMemo(
+    () => positionDataFull.slice(0, currentTick + 1),
+    [positionDataFull, currentTick],
   )
 
   const orderBook = useMemo(
@@ -107,25 +116,81 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     [data, selectedProduct, currentTick],
   )
 
-  const stats = useMemo(
-    () => (data ? getStats(data, selectedProduct) : mockStats),
-    [data, selectedProduct],
-  )
+  // Derive stats from sliced arrays so they work for both mock and real data
+  const stats = useMemo(() => {
+    const lastPnl = pnlData[pnlData.length - 1]
+    const lastPos = positionData[positionData.length - 1]
+    // Max drawdown
+    let peak = -Infinity, maxDrawdown = 0
+    for (const p of pnlData) {
+      if (p.total > peak) peak = p.total
+      const dd = peak - p.total
+      if (dd > maxDrawdown) maxDrawdown = dd
+    }
+    // Microprice
+    let microprice = orderBook.midPrice
+    if (orderBook.bids[0] && orderBook.asks[0]) {
+      const bb = orderBook.bids[0], ba = orderBook.asks[0]
+      microprice = (bb.price * ba.size + ba.price * bb.size) / (bb.size + ba.size)
+    }
+    return {
+      totalPnl: lastPnl?.total ?? 0,
+      maxDrawdown: Math.round(maxDrawdown * 1000) / 1000,
+      emeraldsPnl: lastPnl?.emeralds ?? 0,
+      position: lastPos?.position ?? 0,
+      microprice: Math.round(microprice * 100) / 100,
+      midPrice: orderBook.midPrice,
+    }
+  }, [pnlData, positionData, orderBook])
 
-  const productSummary = useMemo(
-    () => (data ? getProductSummary(data, selectedProduct, currentTick) : mockProductSummary),
-    [data, selectedProduct, currentTick],
-  )
+  const productSummary = useMemo(() => {
+    const lastPos = positionData[positionData.length - 1]
+    const lastPrice = priceData[priceData.length - 1]
+    return {
+      position: lastPos?.position ?? 0,
+      pnl: (pnlData[pnlData.length - 1] as Record<string, number>)?.[selectedProduct.toLowerCase()] ?? 0,
+      midPrice: lastPrice?.mid ?? 0,
+      spread: orderBook.spread,
+    }
+  }, [positionData, priceData, pnlData, selectedProduct, orderBook])
 
-  const marketDynamics = useMemo(
-    () => (data ? getMarketDynamics(data, selectedProduct) : mockMarketDynamics),
-    [data, selectedProduct],
-  )
+  const marketDynamics = useMemo(() => {
+    // Volatility from price changes
+    const changes: number[] = []
+    for (let i = 1; i < priceData.length; i++) {
+      changes.push(priceData[i].mid - priceData[i - 1].mid)
+    }
+    const mean = changes.reduce((s, c) => s + c, 0) / (changes.length || 1)
+    const variance = changes.reduce((s, c) => s + (c - mean) ** 2, 0) / (changes.length || 1)
+    const volatility = Math.sqrt(variance)
+    // Momentum from position
+    const pos = positionData[positionData.length - 1]?.position ?? 0
+    // Spread efficiency
+    let spreadSum = 0, count = 0
+    for (const p of priceData) {
+      if (p.bid && p.ask && p.mid) {
+        spreadSum += (p.ask - p.bid) / p.mid
+        count++
+      }
+    }
+    const efficiency = count > 0 ? (spreadSum / count) * 100 : 0
+    return {
+      volatility: `${volatility.toFixed(2)} pts`,
+      tradeMomentum: `${pos} vol`,
+      spreadEfficiency: `${efficiency.toFixed(3)}%`,
+    }
+  }, [priceData, positionData])
 
-  const fills = useMemo(
-    () => (data?.fills ?? mockFills),
-    [data],
-  )
+  // Filter fills up to current tick
+  const allFills = useMemo(() => (data?.fills ?? mockFills), [data])
+  const fills = useMemo(() => {
+    if (!data) return allFills
+    const rows = data.activitiesByProduct.get(selectedProduct) ?? []
+    const row = rows[currentTick]
+    if (!row) return allFills
+    const tickOrigTs = row.timestamp + (row.day === 0 ? 100000 : 0)
+    return allFills.filter(f => f.timestamp <= tickOrigTs)
+  }, [allFills, data, selectedProduct, currentTick])
 
   const logs = useMemo(
     () => (data?.logs ?? mockLogs),
@@ -143,8 +208,11 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setPlaying,
     totalTicks,
     priceData,
+    priceDataFull,
     pnlData,
+    pnlDataFull,
     positionData,
+    positionDataFull,
     orderBook,
     stats,
     productSummary,
@@ -154,7 +222,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     loadLog,
   }), [
     data, products, selectedProduct, currentTick, playing, totalTicks,
-    priceData, pnlData, positionData, orderBook, stats,
+    priceData, priceDataFull, pnlData, pnlDataFull, positionData, positionDataFull, orderBook, stats,
     productSummary, marketDynamics, fills, logs, loadLog,
   ])
 

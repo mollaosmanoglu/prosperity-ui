@@ -9,7 +9,7 @@ import { useDashboard } from "@/lib/dashboard-context"
 
 export function TickScrubber() {
   const { currentTick, setCurrentTick, playing, setPlaying, totalTicks, loadLog } = useDashboard()
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const rafRef = useRef<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const maxTick = totalTicks - 1
@@ -17,27 +17,24 @@ export function TickScrubber() {
 
   const stop = useCallback(() => {
     setPlaying(false)
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = null
     }
   }, [setPlaying])
 
   useEffect(() => {
-    if (playing) {
-      intervalRef.current = setInterval(() => {
-        setCurrentTick((t: number) => {
-          if (t >= maxTick) {
-            stop()
-            return maxTick
-          }
-          return t + 10
-        })
-      }, 16)
-    }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
+    if (!playing) return
+    const id = setInterval(() => {
+      setCurrentTick((t: number) => {
+        if (t >= maxTick) {
+          stop()
+          return maxTick
+        }
+        return t + 5
+      })
+    }, 80) // 12.5fps — bounded render budget
+    return () => clearInterval(id)
   }, [playing, stop, maxTick, setCurrentTick])
 
   function togglePlay() {

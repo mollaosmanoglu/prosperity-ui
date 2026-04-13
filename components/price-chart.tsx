@@ -110,7 +110,7 @@ function PriceTooltip({ active, payload, label }: any) {
 }
 
 export const PriceChart = memo(function PriceChart() {
-  const { priceData, selectedProduct } = useDashboard()
+  const { priceData, priceDataFull, selectedProduct } = useDashboard()
 
   const [view, setView] = useState<ChartView>("prices")
   const [resolution, setResolution] = useState<"sampled" | "full">("sampled")
@@ -126,7 +126,7 @@ export const PriceChart = memo(function PriceChart() {
     [data]
   )
   const volumeData = useMemo(
-    () => data.map((d) => ({ tick: d.tick, volume: Math.round((d.ask - d.bid) * (3 + Math.random() * 5)) })),
+    () => data.map((d, i) => ({ tick: d.tick, volume: Math.round((d.ask - d.bid) * (3 + (i % 5) + 1)) })),
     [data]
   )
 
@@ -199,7 +199,7 @@ export const PriceChart = memo(function PriceChart() {
         <div className="flex items-center gap-2">
           <PillTabs id="resolution" options={["sampled", "full"] as const} value={resolution} onChange={setResolution} />
           <span className="text-[10px] text-zinc-400">
-            {data.length.toLocaleString()} / {priceData.length.toLocaleString()}
+            {data.length.toLocaleString()} / {priceDataFull.length.toLocaleString()}
           </span>
           <Dialog>
             <DialogTrigger className="flex items-center gap-1 rounded-md border border-zinc-200 px-2 py-1 text-[10px] text-zinc-500 hover:bg-zinc-50">

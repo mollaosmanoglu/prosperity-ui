@@ -281,33 +281,39 @@ export function getOrderBook(data: DashboardData, product: string, tick: number)
   }
 }
 
-export function getStats(data: DashboardData, product: string): StatsData {
+export function getStats(data: DashboardData, product: string, tick?: number): StatsData {
   const pnlSeries = getPnlData(data)
-  const lastPnl = pnlSeries[pnlSeries.length - 1]
+  const end = tick != null ? tick + 1 : pnlSeries.length
+  const sliced = pnlSeries.slice(0, end)
+  const lastPnl = sliced[sliced.length - 1]
 
-  // Max drawdown from total PnL
+  // Max drawdown from total PnL up to tick
   let peak = -Infinity
   let maxDrawdown = 0
-  for (const p of pnlSeries) {
+  for (const p of sliced) {
     if (p.total > peak) peak = p.total
     const dd = peak - p.total
     if (dd > maxDrawdown) maxDrawdown = dd
   }
 
-  // Final position
+  // Position up to tick
+  const rows = data.activitiesByProduct.get(product) ?? []
   const trades = data.tradesByProduct.get(product) ?? []
+  const rowAtTick = tick != null ? rows[tick] : rows[rows.length - 1]
+  const tickOrigTs = rowAtTick ? rowAtTick.timestamp + (rowAtTick.day === 0 ? 100000 : 0) : Infinity
   let position = 0
   for (const t of trades) {
-    position += t.side === "BUY" ? t.quantity : -t.quantity
+    if (t.timestamp <= tickOrigTs) {
+      position += t.side === "BUY" ? t.quantity : -t.quantity
+    }
   }
 
-  // Microprice from last tick's order book
-  const rows = data.activitiesByProduct.get(product) ?? []
-  const lastRow = rows[rows.length - 1]
-  let microprice = lastRow?.midPrice ?? 0
-  if (lastRow && lastRow.bidLevels[0] && lastRow.askLevels[0]) {
-    const bb = lastRow.bidLevels[0]
-    const ba = lastRow.askLevels[0]
+  // Microprice from tick's order book
+  const row = rowAtTick ?? rows[rows.length - 1]
+  let microprice = row?.midPrice ?? 0
+  if (row && row.bidLevels[0] && row.askLevels[0]) {
+    const bb = row.bidLevels[0]
+    const ba = row.askLevels[0]
     microprice = (bb.price * ba.size + ba.price * bb.size) / (bb.size + ba.size)
   }
 
@@ -317,7 +323,7 @@ export function getStats(data: DashboardData, product: string): StatsData {
     emeraldsPnl: lastPnl?.emeralds ?? 0,
     position,
     microprice: Math.round(microprice * 100) / 100,
-    midPrice: lastRow?.midPrice ?? 0,
+    midPrice: row?.midPrice ?? 0,
   }
 }
 
@@ -350,8 +356,9 @@ export function getProductSummary(data: DashboardData, product: string, tick: nu
   }
 }
 
-export function getMarketDynamics(data: DashboardData, product: string): MarketDynamicsData {
-  const rows = data.activitiesByProduct.get(product) ?? []
+export function getMarketDynamics(data: DashboardData, product: string, tick?: number): MarketDynamicsData {
+  const allRows = data.activitiesByProduct.get(product) ?? []
+  const rows = tick != null ? allRows.slice(0, tick + 1) : allRows
   const trades = data.tradesByProduct.get(product) ?? []
 
   // Volatility: stddev of mid price changes
@@ -363,10 +370,14 @@ export function getMarketDynamics(data: DashboardData, product: string): MarketD
   const variance = changes.reduce((s, c) => s + (c - mean) ** 2, 0) / (changes.length || 1)
   const volatility = Math.sqrt(variance)
 
-  // Trade momentum: net volume
+  // Trade momentum up to tick
+  const rowAtTick = tick != null ? allRows[tick] : allRows[allRows.length - 1]
+  const tickOrigTs = rowAtTick ? rowAtTick.timestamp + (rowAtTick.day === 0 ? 100000 : 0) : Infinity
   let momentum = 0
   for (const t of trades) {
-    momentum += t.side === "BUY" ? t.quantity : -t.quantity
+    if (t.timestamp <= tickOrigTs) {
+      momentum += t.side === "BUY" ? t.quantity : -t.quantity
+    }
   }
 
   // Spread efficiency: average spread / mid
