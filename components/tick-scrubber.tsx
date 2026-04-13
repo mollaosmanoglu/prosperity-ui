@@ -95,10 +95,9 @@ export function TickScrubber() {
         </AnimatePresence>
         {playing && (
           <motion.span
-            className="absolute inset-0 rounded-md bg-zinc-900"
-            initial={{ opacity: 0.4 }}
-            animate={{ opacity: 0, scale: 1.5 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "easeOut" }}
+            className="absolute inset-0 rounded-md bg-white/20"
+            animate={{ opacity: [0, 1, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
           />
         )}
       </button>
