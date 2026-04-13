@@ -1,6 +1,6 @@
 "use client"
 
-import { memo } from "react"
+import { memo, useMemo } from "react"
 import { Maximize2 } from "lucide-react"
 import {
   LineChart,
@@ -11,9 +11,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts"
-import { pnlData } from "@/lib/mock-data"
-
-const sampled = pnlData.filter((_, i) => i % 10 === 0)
+import { useDashboard } from "@/lib/dashboard-context"
 
 const MARGIN = { top: 5, right: 5, bottom: 5, left: 5 }
 const TICK_STYLE = { fontSize: 10, fill: "#a1a1aa" }
@@ -26,6 +24,12 @@ const TOOLTIP_STYLE = {
 }
 
 export const PnlChart = memo(function PnlChart() {
+  const { pnlData, products } = useDashboard()
+  const sampled = useMemo(() => pnlData.filter((_, i) => i % 10 === 0), [pnlData])
+
+  // Use first product as the per-product line
+  const productKey = products[0]?.toLowerCase() ?? "emeralds"
+
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
       <div className="flex items-center justify-between">
@@ -38,7 +42,7 @@ export const PnlChart = memo(function PnlChart() {
             </div>
             <div className="flex items-center gap-1">
               <div className="size-2 rounded-full bg-emerald-500" />
-              <span className="text-[10px] text-zinc-500">EMERALDS</span>
+              <span className="text-[10px] text-zinc-500">{products[0] ?? "EMERALDS"}</span>
             </div>
           </div>
           <span className="text-[10px] text-zinc-400">Drag to zoom</span>
@@ -76,7 +80,7 @@ export const PnlChart = memo(function PnlChart() {
             <Line
               isAnimationActive={false}
               type="monotone"
-              dataKey="emeralds"
+              dataKey={productKey}
               stroke="#059669"
               dot={false}
               strokeWidth={1.5}

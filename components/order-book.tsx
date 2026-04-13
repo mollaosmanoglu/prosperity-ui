@@ -2,16 +2,18 @@
 
 import { memo } from "react"
 import { BarChart3 } from "lucide-react"
-import { orderBook } from "@/lib/mock-data"
+import { useDashboard } from "@/lib/dashboard-context"
 
 export const OrderBook = memo(function OrderBook() {
+  const { orderBook, selectedProduct } = useDashboard()
+
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <BarChart3 className="size-4 text-zinc-500" />
-          <h3 className="text-xs font-semibold">Order Book: EMERALDS</h3>
+          <h3 className="text-xs font-semibold">Order Book: {selectedProduct}</h3>
         </div>
         <div className="flex items-center gap-1 text-[10px]">
           <span className="text-zinc-500">SPREAD:</span>

@@ -1,6 +1,6 @@
 "use client"
 
-import { memo } from "react"
+import { memo, useMemo } from "react"
 import { Maximize2 } from "lucide-react"
 import {
   LineChart,
@@ -12,9 +12,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts"
-import { positionData } from "@/lib/mock-data"
-
-const sampled = positionData.filter((_, i) => i % 10 === 0)
+import { useDashboard } from "@/lib/dashboard-context"
 
 const MARGIN = { top: 5, right: 5, bottom: 5, left: 5 }
 const TICK_STYLE = { fontSize: 10, fill: "#a1a1aa" }
@@ -28,10 +26,13 @@ const TOOLTIP_STYLE = {
 }
 
 export const PositionChart = memo(function PositionChart() {
+  const { positionData, selectedProduct } = useDashboard()
+  const sampled = useMemo(() => positionData.filter((_, i) => i % 10 === 0), [positionData])
+
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold">Position: EMERALDS</h3>
+        <h3 className="text-xs font-semibold">Position: {selectedProduct}</h3>
         <div className="flex items-center gap-2">
           <span className="text-[10px] text-zinc-400">Drag to zoom</span>
           <button className="flex items-center gap-1 rounded-md border border-zinc-200 px-2 py-1 text-[10px] text-zinc-500 hover:bg-zinc-50">

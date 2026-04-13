@@ -1,20 +1,22 @@
 "use client"
 
-import { memo } from "react"
+import { memo, useMemo } from "react"
 import { Info } from "lucide-react"
-import { marketDynamics } from "@/lib/mock-data"
-
-const rows = [
-  { label: "Volatility", value: marketDynamics.volatility, pct: 0, color: "bg-zinc-400" },
-  { label: "Trade Momentum", value: marketDynamics.tradeMomentum, pct: 50, color: "bg-zinc-400" },
-  { label: "Spread Efficiency", value: marketDynamics.spreadEfficiency, pct: 16, color: "bg-emerald-400" },
-]
+import { useDashboard } from "@/lib/dashboard-context"
 
 export const MarketDynamics = memo(function MarketDynamics() {
+  const { marketDynamics, selectedProduct } = useDashboard()
+
+  const rows = useMemo(() => [
+    { label: "Volatility", value: marketDynamics.volatility, pct: 0, color: "bg-zinc-400" },
+    { label: "Trade Momentum", value: marketDynamics.tradeMomentum, pct: 50, color: "bg-zinc-400" },
+    { label: "Spread Efficiency", value: marketDynamics.spreadEfficiency, pct: 16, color: "bg-emerald-400" },
+  ], [marketDynamics])
+
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
       <div className="flex items-center gap-1.5">
-        <h3 className="text-xs font-semibold">Market Dynamics: EMERALDS</h3>
+        <h3 className="text-xs font-semibold">Market Dynamics: {selectedProduct}</h3>
         <Info className="size-3 text-zinc-400" />
       </div>
       <div className="flex flex-col gap-2.5">

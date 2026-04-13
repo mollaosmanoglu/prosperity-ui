@@ -1,20 +1,19 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useEffect, useCallback, useRef } from "react"
 import { Play, Pause, RotateCcw, Upload } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 import { Slider } from "@/components/ui/slider"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { TOTAL_TICKS_COUNT } from "@/lib/mock-data"
-
-const MAX_TICK = TOTAL_TICKS_COUNT - 1
+import { useDashboard } from "@/lib/dashboard-context"
 
 export function TickScrubber() {
-  const [playing, setPlaying] = useState(false)
-  const [tick, setTick] = useState(0)
+  const { currentTick, setCurrentTick, playing, setPlaying, totalTicks, loadLog } = useDashboard()
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const atEnd = tick >= MAX_TICK
+  const maxTick = totalTicks - 1
+  const atEnd = currentTick >= maxTick
 
   const stop = useCallback(() => {
     setPlaying(false)
@@ -22,20 +21,15 @@ export function TickScrubber() {
       clearInterval(intervalRef.current)
       intervalRef.current = null
     }
-  }, [])
-
-  const reset = useCallback(() => {
-    stop()
-    setTick(0)
-  }, [stop])
+  }, [setPlaying])
 
   useEffect(() => {
     if (playing) {
       intervalRef.current = setInterval(() => {
-        setTick((t) => {
-          if (t >= MAX_TICK) {
+        setCurrentTick((t: number) => {
+          if (t >= maxTick) {
             stop()
-            return MAX_TICK
+            return maxTick
           }
           return t + 10
         })
@@ -44,28 +38,46 @@ export function TickScrubber() {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
-  }, [playing, stop])
+  }, [playing, stop, maxTick, setCurrentTick])
 
   function togglePlay() {
     if (atEnd) {
-      setTick(0)
+      setCurrentTick(0)
       setPlaying(true)
       return
     }
     setPlaying(!playing)
   }
 
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const text = await file.text()
+    loadLog(text)
+    e.target.value = ""
+  }
+
   return (
     <div className="flex flex-1 items-center gap-3">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".log,.json"
+        className="hidden"
+        onChange={handleUpload}
+      />
       <Tooltip>
-        <TooltipTrigger className="flex size-7 shrink-0 items-center justify-center rounded-md text-zinc-400 hover:text-zinc-900">
+        <TooltipTrigger
+          className="flex size-7 shrink-0 items-center justify-center rounded-md text-zinc-400 hover:text-zinc-900 cursor-pointer"
+          onClick={() => fileInputRef.current?.click()}
+        >
           <Upload className="size-3.5" />
         </TooltipTrigger>
         <TooltipContent>Upload .log file</TooltipContent>
       </Tooltip>
       <Tooltip>
         <TooltipTrigger
-          className="relative flex size-7 shrink-0 items-center justify-center rounded-md bg-zinc-900 text-white"
+          className="relative flex size-7 shrink-0 items-center justify-center rounded-md bg-zinc-900 text-white cursor-pointer"
           onClick={togglePlay}
         >
         <AnimatePresence mode="wait">
@@ -112,13 +124,13 @@ export function TickScrubber() {
         <TooltipContent>{atEnd ? "Restart" : playing ? "Pause" : "Play"}</TooltipContent>
       </Tooltip>
       <span className="text-[11px] font-mono text-zinc-500 shrink-0">
-        {tick.toLocaleString()} / {MAX_TICK.toLocaleString()}
+        {currentTick.toLocaleString()} / {maxTick.toLocaleString()}
       </span>
       <Slider
-        value={[tick]}
-        onValueChange={(v) => { const val = Array.isArray(v) ? v[0] : v; setTick(val); if (playing) stop() }}
+        value={[currentTick]}
+        onValueChange={(v) => { const val = Array.isArray(v) ? v[0] : v; setCurrentTick(val); if (playing) stop() }}
         min={0}
-        max={MAX_TICK}
+        max={maxTick}
         className="flex-1"
       />
     </div>

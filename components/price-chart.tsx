@@ -18,12 +18,9 @@ import {
 } from "recharts"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
-import { priceData, orderBook } from "@/lib/mock-data"
+import { useDashboard } from "@/lib/dashboard-context"
 
 type ChartView = "prices" | "spread" | "volume"
-
-const fullData = priceData
-const sampledData = priceData.filter((_, i) => i % 10 === 0)
 
 const seriesColors = {
   ask: "#ef4444",
@@ -88,16 +85,6 @@ function PriceTooltip({ active, payload, label }: any) {
           <span className="ml-auto text-[10px] font-mono font-medium">{data.bid.toLocaleString()}</span>
         </div>
       )}
-      <div className="flex items-center gap-1.5">
-        <span className="size-1.5 rounded-full bg-emerald-400" />
-        <span className="text-[10px] text-zinc-500">Total Bid Volume</span>
-        <span className="ml-auto text-[10px] font-mono font-medium">{orderBook.bids.reduce((s, b) => s + b.size, 0)}</span>
-      </div>
-      <div className="flex items-center gap-1.5">
-        <span className="size-1.5 rounded-full bg-red-400" />
-        <span className="text-[10px] text-zinc-500">Total Ask Volume</span>
-        <span className="ml-auto text-[10px] font-mono font-medium">{orderBook.asks.reduce((s, a) => s + a.size, 0)}</span>
-      </div>
       {data.buyFill != null && (
         <>
           <div className="my-1 border-t border-zinc-100" />
@@ -123,11 +110,15 @@ function PriceTooltip({ active, payload, label }: any) {
 }
 
 export const PriceChart = memo(function PriceChart() {
+  const { priceData, selectedProduct } = useDashboard()
+
   const [view, setView] = useState<ChartView>("prices")
   const [resolution, setResolution] = useState<"sampled" | "full">("sampled")
   const [visible, setVisible] = useState<Set<string>>(new Set(SERIES_KEYS))
   const [advanced, setAdvanced] = useState<Set<string>>(new Set())
 
+  const fullData = priceData
+  const sampledData = useMemo(() => priceData.filter((_, i) => i % 10 === 0), [priceData])
   const data = resolution === "sampled" ? sampledData : fullData
 
   const spreadData = useMemo(
@@ -204,11 +195,11 @@ export const PriceChart = memo(function PriceChart() {
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold">Price &amp; Liquidity: EMERALDS</h3>
+        <h3 className="text-xs font-semibold">Price &amp; Liquidity: {selectedProduct}</h3>
         <div className="flex items-center gap-2">
           <PillTabs id="resolution" options={["sampled", "full"] as const} value={resolution} onChange={setResolution} />
           <span className="text-[10px] text-zinc-400">
-            {data.length.toLocaleString()} / 2,000
+            {data.length.toLocaleString()} / {priceData.length.toLocaleString()}
           </span>
           <Dialog>
             <DialogTrigger className="flex items-center gap-1 rounded-md border border-zinc-200 px-2 py-1 text-[10px] text-zinc-500 hover:bg-zinc-50">
@@ -216,7 +207,7 @@ export const PriceChart = memo(function PriceChart() {
               Expand
             </DialogTrigger>
             <DialogContent className="!max-w-[95vw] w-full p-6">
-              <h3 className="text-xs font-semibold mb-2">Price &amp; Liquidity: EMERALDS</h3>
+              <h3 className="text-xs font-semibold mb-2">Price &amp; Liquidity: {selectedProduct}</h3>
               {renderChart("h-[80vh]")}
             </DialogContent>
           </Dialog>

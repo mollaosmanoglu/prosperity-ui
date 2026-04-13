@@ -1,49 +1,51 @@
 "use client"
 
-import { memo } from "react"
+import { memo, useMemo } from "react"
 import { Info, TrendingUp, TrendingDown } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { stats } from "@/lib/mock-data"
-
-const cards = [
-  {
-    title: "Total PnL",
-    value: stats.totalPnl.toLocaleString(),
-    subtitle: "Cumulative",
-    trend: "up" as const,
-    tooltip: "Total profit and loss across all products",
-  },
-  {
-    title: "Max Drawdown",
-    value: stats.maxDrawdown.toLocaleString(),
-    subtitle: "Peak-to-Trough",
-    trend: "down" as const,
-    tooltip: "Largest peak-to-trough decline in PnL",
-  },
-  {
-    title: "EMERALDS PnL",
-    value: stats.emeraldsPnl.toLocaleString(),
-    subtitle: "By Product",
-    trend: "up" as const,
-    tooltip: "Profit and loss for EMERALDS only",
-  },
-  {
-    title: "Position",
-    value: stats.position.toString(),
-    subtitle: "Current Inventory",
-    trend: "down" as const,
-    tooltip: "Current net position (positive = long, negative = short)",
-  },
-  {
-    title: "Microprice",
-    value: stats.microprice.toFixed(2),
-    subtitle: `Mid: ${stats.midPrice.toFixed(1)}`,
-    trend: null,
-    tooltip: "Size-weighted midpoint price from the order book",
-  },
-]
+import { useDashboard } from "@/lib/dashboard-context"
 
 export const StatCards = memo(function StatCards() {
+  const { stats } = useDashboard()
+
+  const cards = useMemo(() => [
+    {
+      title: "Total PnL",
+      value: stats.totalPnl.toLocaleString(),
+      subtitle: "Cumulative",
+      trend: "up" as const,
+      tooltip: "Total profit and loss across all products",
+    },
+    {
+      title: "Max Drawdown",
+      value: stats.maxDrawdown.toLocaleString(),
+      subtitle: "Peak-to-Trough",
+      trend: "down" as const,
+      tooltip: "Largest peak-to-trough decline in PnL",
+    },
+    {
+      title: "EMERALDS PnL",
+      value: stats.emeraldsPnl.toLocaleString(),
+      subtitle: "By Product",
+      trend: "up" as const,
+      tooltip: "Profit and loss for EMERALDS only",
+    },
+    {
+      title: "Position",
+      value: stats.position.toString(),
+      subtitle: "Current Inventory",
+      trend: "down" as const,
+      tooltip: "Current net position (positive = long, negative = short)",
+    },
+    {
+      title: "Microprice",
+      value: stats.microprice.toFixed(2),
+      subtitle: `Mid: ${stats.midPrice.toFixed(1)}`,
+      trend: null,
+      tooltip: "Size-weighted midpoint price from the order book",
+    },
+  ], [stats])
+
   return (
     <div className="grid grid-cols-5 gap-3">
       {cards.map((card) => (

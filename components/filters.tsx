@@ -2,13 +2,15 @@
 
 import { useState } from "react"
 import { PillTabs } from "@/components/pill-tabs"
+import { useDashboard } from "@/lib/dashboard-context"
 
 const sources = ["Tutorial Sub", "IMC Day Replay"] as const
-const products = ["All Products", "EMERALDS", "TOMATOES"] as const
 
 export function Filters() {
+  const { products, selectedProduct, setSelectedProduct } = useDashboard()
   const [source, setSource] = useState<(typeof sources)[number]>("Tutorial Sub")
-  const [product, setProduct] = useState<(typeof products)[number]>("EMERALDS")
+
+  const productOptions = ["All Products", ...products] as const
 
   return (
     <div className="flex items-center gap-6">
@@ -18,7 +20,12 @@ export function Filters() {
       </div>
       <div className="flex items-center gap-1.5">
         <span className="text-[10px] font-medium text-zinc-400">Product</span>
-        <PillTabs id="product" options={products} value={product} onChange={setProduct} />
+        <PillTabs
+          id="product"
+          options={productOptions}
+          value={selectedProduct}
+          onChange={(v) => setSelectedProduct(v === "All Products" ? products[0] : v)}
+        />
       </div>
     </div>
   )
