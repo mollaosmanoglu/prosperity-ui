@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react"
 import { Info } from "lucide-react"
 import { marketDynamics } from "@/lib/mock-data"
 
@@ -9,7 +10,7 @@ const rows = [
   { label: "Spread Efficiency", value: marketDynamics.spreadEfficiency, pct: 16, color: "bg-emerald-400" },
 ]
 
-export function MarketDynamics() {
+export const MarketDynamics = memo(function MarketDynamics() {
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
       <div className="flex items-center gap-1.5">
@@ -34,4 +35,4 @@ export function MarketDynamics() {
       </div>
     </div>
   )
-}
+})

@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react"
 import { Maximize2 } from "lucide-react"
 import {
   LineChart,
@@ -15,7 +16,18 @@ import { positionData } from "@/lib/mock-data"
 
 const sampled = positionData.filter((_, i) => i % 10 === 0)
 
-export function PositionChart() {
+const MARGIN = { top: 5, right: 5, bottom: 5, left: 5 }
+const TICK_STYLE = { fontSize: 10, fill: "#a1a1aa" }
+const AXIS_LINE = { stroke: "#e4e4e7" }
+const Y_DOMAIN: [number, number] = [-20, 20]
+const TOOLTIP_STYLE = {
+  fontSize: 11,
+  borderRadius: 8,
+  border: "1px solid #e4e4e7",
+  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+}
+
+export const PositionChart = memo(function PositionChart() {
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
       <div className="flex items-center justify-between">
@@ -30,29 +42,22 @@ export function PositionChart() {
       </div>
       <div className="h-44">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={sampled} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+          <LineChart data={sampled} margin={MARGIN}>
             <CartesianGrid stroke="#f0f0f0" />
             <XAxis
               dataKey="tick"
-              tick={{ fontSize: 10, fill: "#a1a1aa" }}
+              tick={TICK_STYLE}
               tickLine={false}
-              axisLine={{ stroke: "#e4e4e7" }}
+              axisLine={AXIS_LINE}
             />
             <YAxis
-              domain={[-20, 20]}
-              tick={{ fontSize: 10, fill: "#a1a1aa" }}
+              domain={Y_DOMAIN}
+              tick={TICK_STYLE}
               tickLine={false}
               axisLine={false}
               width={30}
             />
-            <Tooltip
-              contentStyle={{
-                fontSize: 11,
-                borderRadius: 8,
-                border: "1px solid #e4e4e7",
-                boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-              }}
-            />
+            <Tooltip contentStyle={TOOLTIP_STYLE} />
             <ReferenceLine y={0} stroke="#a1a1aa" strokeDasharray="3 3" />
             <Line
               isAnimationActive={false}
@@ -67,4 +72,4 @@ export function PositionChart() {
       </div>
     </div>
   )
-}
+})

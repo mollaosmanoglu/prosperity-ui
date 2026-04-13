@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react"
 import { TableProperties } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -19,7 +20,7 @@ const mockFills = [
   { timestamp: 5900, side: "SELL", symbol: "EMERALDS", price: 10007.0, quantity: 8 },
 ]
 
-export function FillsPanel() {
+export const FillsPanel = memo(function FillsPanel() {
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
       <div className="flex items-center justify-between">
@@ -70,4 +71,4 @@ export function FillsPanel() {
       </Table>
     </div>
   )
-}
+})

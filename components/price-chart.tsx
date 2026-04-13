@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback, memo } from "react"
 import { SlidersHorizontal, Maximize2 } from "lucide-react"
 import { PillTabs } from "@/components/pill-tabs"
 import {
@@ -47,12 +47,16 @@ const SERIES_LABELS: Record<string, { label: string; color: string }> = {
 const ADVANCED_KEYS = ["Depth", "Dom Mid", "Micro", "Deep VAMP"] as const
 
 const CHART_TICK = { fontSize: 10, fill: "#a1a1aa" }
+const CHART_MARGIN = { top: 5, right: 5, bottom: 5, left: 5 }
+const AXIS_LINE = { stroke: "#e4e4e7" }
+const Y_DOMAIN_AUTO: [string, string] = ["auto", "auto"]
 const TOOLTIP_STYLE = {
   fontSize: 11,
   borderRadius: 8,
   border: "1px solid #e4e4e7",
   boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
 }
+const EMPTY_TICK = () => ""
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function PriceTooltip({ active, payload, label }: any) {
@@ -118,7 +122,7 @@ function PriceTooltip({ active, payload, label }: any) {
   )
 }
 
-export function PriceChart() {
+export const PriceChart = memo(function PriceChart() {
   const [view, setView] = useState<ChartView>("prices")
   const [resolution, setResolution] = useState<"sampled" | "full">("sampled")
   const [visible, setVisible] = useState<Set<string>>(new Set(SERIES_KEYS))
@@ -155,46 +159,46 @@ export function PriceChart() {
 
   const show = (key: string) => visible.has(key)
 
-  function renderChart(height: string) {
+  const renderChart = useCallback((height: string) => {
     return (
       <div className={height}>
         <ResponsiveContainer width="100%" height="100%">
           {view === "prices" ? (
-            <ComposedChart data={data} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+            <ComposedChart data={data} margin={CHART_MARGIN}>
               <CartesianGrid stroke="#f0f0f0" />
-              <XAxis dataKey="tick" tick={CHART_TICK} tickLine={false} axisLine={{ stroke: "#e4e4e7" }} />
-              <YAxis domain={["auto", "auto"]} tick={CHART_TICK} tickLine={false} axisLine={false} width={50} />
+              <XAxis dataKey="tick" tick={CHART_TICK} tickLine={false} axisLine={AXIS_LINE} />
+              <YAxis domain={Y_DOMAIN_AUTO} tick={CHART_TICK} tickLine={false} axisLine={false} width={50} />
               <Tooltip content={<PriceTooltip />} />
               {show("ask") && <Line isAnimationActive={false} type="monotone" dataKey="ask" stroke={seriesColors.ask} dot={false} strokeWidth={1} />}
               {show("mid") && <Line isAnimationActive={false} type="monotone" dataKey="mid" stroke={seriesColors.mid} dot={false} strokeWidth={1.5} strokeDasharray="4 2" />}
               {show("bid") && <Line isAnimationActive={false} type="monotone" dataKey="bid" stroke={seriesColors.bid} dot={false} strokeWidth={1} />}
               {show("buyFill") && <Scatter isAnimationActive={false} dataKey="buyFill" fill={seriesColors.buyFill} shape="circle" r={1} />}
               {show("sellFill") && <Scatter isAnimationActive={false} dataKey="sellFill" fill={seriesColors.sellFill} shape="circle" r={1} />}
-              <Brush dataKey="tick" height={12} stroke="#e4e4e7" fill="#fafafa" travellerWidth={6} tickFormatter={() => ""} />
+              <Brush dataKey="tick" height={12} stroke="#e4e4e7" fill="#fafafa" travellerWidth={6} tickFormatter={EMPTY_TICK} />
             </ComposedChart>
           ) : view === "spread" ? (
-            <BarChart data={spreadData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+            <BarChart data={spreadData} margin={CHART_MARGIN}>
               <CartesianGrid stroke="#f0f0f0" />
-              <XAxis dataKey="tick" tick={CHART_TICK} tickLine={false} axisLine={{ stroke: "#e4e4e7" }} />
+              <XAxis dataKey="tick" tick={CHART_TICK} tickLine={false} axisLine={AXIS_LINE} />
               <YAxis tick={CHART_TICK} tickLine={false} axisLine={false} width={50} />
               <Tooltip contentStyle={TOOLTIP_STYLE} />
               <Bar isAnimationActive={false} dataKey="spread" fill={seriesColors.spread} />
-              <Brush dataKey="tick" height={12} stroke="#e4e4e7" fill="#fafafa" travellerWidth={6} tickFormatter={() => ""} />
+              <Brush dataKey="tick" height={12} stroke="#e4e4e7" fill="#fafafa" travellerWidth={6} tickFormatter={EMPTY_TICK} />
             </BarChart>
           ) : (
-            <BarChart data={volumeData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+            <BarChart data={volumeData} margin={CHART_MARGIN}>
               <CartesianGrid stroke="#f0f0f0" />
-              <XAxis dataKey="tick" tick={CHART_TICK} tickLine={false} axisLine={{ stroke: "#e4e4e7" }} />
+              <XAxis dataKey="tick" tick={CHART_TICK} tickLine={false} axisLine={AXIS_LINE} />
               <YAxis tick={CHART_TICK} tickLine={false} axisLine={false} width={50} />
               <Tooltip contentStyle={TOOLTIP_STYLE} />
               <Bar isAnimationActive={false} dataKey="volume" fill={seriesColors.volume} />
-              <Brush dataKey="tick" height={12} stroke="#e4e4e7" fill="#fafafa" travellerWidth={6} tickFormatter={() => ""} />
+              <Brush dataKey="tick" height={12} stroke="#e4e4e7" fill="#fafafa" travellerWidth={6} tickFormatter={EMPTY_TICK} />
             </BarChart>
           )}
         </ResponsiveContainer>
       </div>
     )
-  }
+  }, [view, data, spreadData, volumeData, show])
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
@@ -272,4 +276,4 @@ export function PriceChart() {
       {renderChart("h-64")}
     </div>
   )
-}
+})

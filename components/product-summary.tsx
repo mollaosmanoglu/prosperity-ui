@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react"
 import { Info } from "lucide-react"
 import { productSummary, stats } from "@/lib/mock-data"
 
@@ -10,7 +11,7 @@ const rows = [
   { label: "Spread", value: productSummary.spread.toFixed(1), color: "" },
 ]
 
-export function ProductSummary() {
+export const ProductSummary = memo(function ProductSummary() {
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
       <div className="flex items-center gap-1.5">
@@ -30,4 +31,4 @@ export function ProductSummary() {
       </div>
     </div>
   )
-}
+})

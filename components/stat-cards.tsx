@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react"
 import { Info, TrendingUp, TrendingDown } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { stats } from "@/lib/mock-data"
@@ -42,7 +43,7 @@ const cards = [
   },
 ]
 
-export function StatCards() {
+export const StatCards = memo(function StatCards() {
   return (
     <div className="grid grid-cols-5 gap-3">
       {cards.map((card) => (
@@ -77,4 +78,4 @@ export function StatCards() {
       ))}
     </div>
   )
-}
+})

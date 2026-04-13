@@ -1,9 +1,10 @@
 "use client"
 
+import { memo } from "react"
 import { Terminal, Code } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 
-export function LogViewer() {
+export const LogViewer = memo(function LogViewer() {
   return (
     <Tabs defaultValue="sandbox">
       <TabsList>
@@ -28,4 +29,4 @@ export function LogViewer() {
       </TabsContent>
     </Tabs>
   )
-}
+})

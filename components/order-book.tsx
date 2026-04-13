@@ -1,9 +1,10 @@
 "use client"
 
+import { memo } from "react"
 import { BarChart3 } from "lucide-react"
 import { orderBook } from "@/lib/mock-data"
 
-export function OrderBook() {
+export const OrderBook = memo(function OrderBook() {
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
       {/* Header */}
@@ -92,4 +93,4 @@ export function OrderBook() {
       </div>
     </div>
   )
-}
+})
