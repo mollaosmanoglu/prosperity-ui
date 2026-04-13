@@ -1,6 +1,6 @@
 "use client"
 
-import { PlaybackControls } from "@/components/playback-controls"
+import { TickScrubber } from "@/components/tick-scrubber"
 import { StatCards } from "@/components/stat-cards"
 import { Filters } from "@/components/filters"
 import { PriceChart } from "@/components/price-chart"
@@ -16,9 +16,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-zinc-100 text-zinc-900 font-sans">
       <div className="mx-auto max-w-7xl p-4 space-y-4">
-        <h2 className="text-lg font-bold">Dashboard</h2>
-
-        <PlaybackControls />
+        <TickScrubber />
         <StatCards />
         <Filters />
 
