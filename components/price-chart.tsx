@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { SlidersHorizontal } from "lucide-react"
+import { PillTabs } from "@/components/pill-tabs"
 import {
   Bar,
   Line,
@@ -96,20 +97,7 @@ export function PriceChart() {
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold">Price &amp; Liquidity: EMERALDS</h3>
         <div className="flex items-center gap-2">
-          {/* Resolution toggle */}
-          <div className="flex gap-0.5 rounded-lg border border-zinc-200 p-0.5">
-            {(["sampled", "full"] as const).map((r) => (
-              <button
-                key={r}
-                onClick={() => setResolution(r)}
-                className={`rounded-md px-2 py-0.5 text-[10px] font-medium capitalize transition-colors ${
-                  r === resolution ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-100"
-                }`}
-              >
-                {r}
-              </button>
-            ))}
-          </div>
+          <PillTabs id="resolution" options={["sampled", "full"] as const} value={resolution} onChange={setResolution} />
           <span className="text-[10px] text-zinc-400">
             {data.length.toLocaleString()} / 2,000
           </span>
@@ -118,20 +106,7 @@ export function PriceChart() {
 
       {/* View tabs + series toggles */}
       <div className="flex items-center justify-between">
-        {/* View tabs */}
-        <div className="flex gap-0.5 rounded-lg border border-zinc-200 p-0.5">
-          {(["prices", "spread", "volume"] as const).map((v) => (
-            <button
-              key={v}
-              onClick={() => setView(v)}
-              className={`rounded-md px-2.5 py-0.5 text-[10px] font-medium capitalize transition-colors ${
-                v === view ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-100"
-              }`}
-            >
-              {v}
-            </button>
-          ))}
-        </div>
+        <PillTabs id="chart-view" options={["prices", "spread", "volume"] as const} value={view} onChange={setView} />
 
         {/* Series toggles (prices view only) */}
         {view === "prices" && (
