@@ -24,10 +24,17 @@ const TOOLTIP_STYLE = {
   boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
 }
 
+const PRODUCT_COLORS: Record<string, string> = {
+  EMERALDS: "#059669",
+  TOMATOES: "#e11d48",
+}
+const DEFAULT_COLOR = "#2563eb"
+
 export const PnlChart = memo(function PnlChart() {
   const { pnlData, selectedProduct } = useDashboard()
   const sampled = useMemo(() => pnlData.filter((_, i) => i % 10 === 0), [pnlData])
   const productKey = selectedProduct.toLowerCase()
+  const productColor = PRODUCT_COLORS[selectedProduct] ?? DEFAULT_COLOR
 
   function renderChart(height: string) {
     return (
@@ -39,7 +46,7 @@ export const PnlChart = memo(function PnlChart() {
             <YAxis tick={TICK_STYLE} tickLine={false} axisLine={false} width={50} />
             <Tooltip contentStyle={TOOLTIP_STYLE} />
             <Line isAnimationActive={false} type="monotone" dataKey="total" stroke="#18181b" dot={false} strokeWidth={1.5} />
-            <Line isAnimationActive={false} type="monotone" dataKey={productKey} stroke="#059669" dot={false} strokeWidth={1.5} />
+            <Line isAnimationActive={false} type="monotone" dataKey={productKey} stroke={productColor} dot={false} strokeWidth={1.5} />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -57,7 +64,7 @@ export const PnlChart = memo(function PnlChart() {
               <span className="text-[10px] text-zinc-500">TOTAL</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="size-2 rounded-full" style={{ backgroundColor: "#059669" }} />
+              <div className="size-2 rounded-full" style={{ backgroundColor: productColor }} />
               <span className="text-[10px] text-zinc-500">{selectedProduct}</span>
             </div>
           </div>

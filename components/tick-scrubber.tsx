@@ -62,7 +62,7 @@ export function TickScrubber() {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".log,.json"
+        accept=".log"
         className="hidden"
         onChange={handleUpload}
       />
