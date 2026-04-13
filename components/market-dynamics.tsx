@@ -23,7 +23,7 @@ export function MarketDynamics() {
               <span className="text-[11px] text-zinc-500">{row.label}</span>
               <span className="text-[11px] font-mono font-semibold">{row.value}</span>
             </div>
-            <div className="h-1 w-full rounded-full bg-zinc-100">
+            <div className="h-1.5 w-full rounded-full bg-zinc-100">
               <div
                 className={`h-full rounded-full ${row.color}`}
                 style={{ width: `${Math.max(row.pct, 1)}%` }}

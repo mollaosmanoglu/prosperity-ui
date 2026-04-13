@@ -58,7 +58,7 @@ export function PositionChart() {
               isAnimationActive={false}
               type="monotone"
               dataKey="position"
-              stroke="#7c3aed"
+              stroke="#6d28d9"
               dot={false}
               strokeWidth={1.5}
             />

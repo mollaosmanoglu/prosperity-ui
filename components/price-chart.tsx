@@ -27,7 +27,7 @@ const sampledData = priceData.filter((_, i) => i % 10 === 0)
 
 const seriesColors = {
   ask: "#ef4444",
-  mid: "#a1a1aa",
+  mid: "#18181b",
   bid: "#22c55e",
   buyFill: "#3b82f6",
   sellFill: "#f97316",

@@ -73,7 +73,7 @@ export function PnlChart() {
               isAnimationActive={false}
               type="monotone"
               dataKey="emeralds"
-              stroke="#10b981"
+              stroke="#059669"
               dot={false}
               strokeWidth={1.5}
             />
