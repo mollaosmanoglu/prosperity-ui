@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts"
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { useDashboard } from "@/lib/dashboard-context"
 
 const MARGIN = { top: 5, right: 5, bottom: 5, left: 5 }
@@ -29,48 +30,39 @@ export const PositionChart = memo(function PositionChart() {
   const { positionData, selectedProduct } = useDashboard()
   const sampled = useMemo(() => positionData.filter((_, i) => i % 10 === 0), [positionData])
 
+  function renderChart(height: string) {
+    return (
+      <div className={height}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={sampled} margin={MARGIN}>
+            <CartesianGrid stroke="#f0f0f0" />
+            <XAxis dataKey="tick" tick={TICK_STYLE} tickLine={false} axisLine={AXIS_LINE} />
+            <YAxis domain={Y_DOMAIN} tick={TICK_STYLE} tickLine={false} axisLine={false} width={30} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <ReferenceLine y={0} stroke="#a1a1aa" strokeDasharray="3 3" />
+            <Line isAnimationActive={false} type="monotone" dataKey="position" stroke="#6d28d9" dot={false} strokeWidth={1.5} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-semibold">Position: {selectedProduct}</h3>
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] text-zinc-400">Drag to zoom</span>
-          <button className="flex items-center gap-1 rounded-md border border-zinc-200 px-2 py-1 text-[10px] text-zinc-500 hover:bg-zinc-50">
+        <Dialog>
+          <DialogTrigger className="flex items-center gap-1 rounded-md border border-zinc-200 px-2 py-1 text-[10px] text-zinc-500 hover:bg-zinc-50">
             <Maximize2 className="size-3" />
             Expand
-          </button>
-        </div>
+          </DialogTrigger>
+          <DialogContent className="!max-w-[95vw] w-full p-6">
+            <h3 className="text-xs font-semibold mb-2">Position: {selectedProduct}</h3>
+            {renderChart("h-[80vh]")}
+          </DialogContent>
+        </Dialog>
       </div>
-      <div className="h-44">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={sampled} margin={MARGIN}>
-            <CartesianGrid stroke="#f0f0f0" />
-            <XAxis
-              dataKey="tick"
-              tick={TICK_STYLE}
-              tickLine={false}
-              axisLine={AXIS_LINE}
-            />
-            <YAxis
-              domain={Y_DOMAIN}
-              tick={TICK_STYLE}
-              tickLine={false}
-              axisLine={false}
-              width={30}
-            />
-            <Tooltip contentStyle={TOOLTIP_STYLE} />
-            <ReferenceLine y={0} stroke="#a1a1aa" strokeDasharray="3 3" />
-            <Line
-              isAnimationActive={false}
-              type="monotone"
-              dataKey="position"
-              stroke="#6d28d9"
-              dot={false}
-              strokeWidth={1.5}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      {renderChart("h-44")}
     </div>
   )
 })

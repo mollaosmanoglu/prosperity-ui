@@ -148,6 +148,25 @@
   }
 }
 
+/* Thin scrollbar */
+.thin-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 2px;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a1a1aa;
+}
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #d4d4d8 transparent;
+}
+
 /* Recharts Brush */
 .recharts-brush {
   user-select: none;

@@ -11,6 +11,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts"
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { useDashboard } from "@/lib/dashboard-context"
 
 const MARGIN = { top: 5, right: 5, bottom: 5, left: 5 }
@@ -24,11 +25,26 @@ const TOOLTIP_STYLE = {
 }
 
 export const PnlChart = memo(function PnlChart() {
-  const { pnlData, products } = useDashboard()
+  const { pnlData, selectedProduct } = useDashboard()
   const sampled = useMemo(() => pnlData.filter((_, i) => i % 10 === 0), [pnlData])
+  const productKey = selectedProduct.toLowerCase()
 
-  // Use first product as the per-product line
-  const productKey = products[0]?.toLowerCase() ?? "emeralds"
+  function renderChart(height: string) {
+    return (
+      <div className={height}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={sampled} margin={MARGIN}>
+            <CartesianGrid stroke="#f0f0f0" />
+            <XAxis dataKey="tick" tick={TICK_STYLE} tickLine={false} axisLine={AXIS_LINE} />
+            <YAxis tick={TICK_STYLE} tickLine={false} axisLine={false} width={50} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <Line isAnimationActive={false} type="monotone" dataKey="total" stroke="#18181b" dot={false} strokeWidth={1.5} />
+            <Line isAnimationActive={false} type="monotone" dataKey={productKey} stroke="#059669" dot={false} strokeWidth={1.5} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
@@ -41,53 +57,23 @@ export const PnlChart = memo(function PnlChart() {
               <span className="text-[10px] text-zinc-500">TOTAL</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="size-2 rounded-full bg-emerald-500" />
-              <span className="text-[10px] text-zinc-500">{products[0] ?? "EMERALDS"}</span>
+              <div className="size-2 rounded-full" style={{ backgroundColor: "#059669" }} />
+              <span className="text-[10px] text-zinc-500">{selectedProduct}</span>
             </div>
           </div>
-          <span className="text-[10px] text-zinc-400">Drag to zoom</span>
-          <button className="flex items-center gap-1 rounded-md border border-zinc-200 px-2 py-1 text-[10px] text-zinc-500 hover:bg-zinc-50">
-            <Maximize2 className="size-3" />
-            Expand
-          </button>
+          <Dialog>
+            <DialogTrigger className="flex items-center gap-1 rounded-md border border-zinc-200 px-2 py-1 text-[10px] text-zinc-500 hover:bg-zinc-50">
+              <Maximize2 className="size-3" />
+              Expand
+            </DialogTrigger>
+            <DialogContent className="!max-w-[95vw] w-full p-6">
+              <h3 className="text-xs font-semibold mb-2">PnL Performance</h3>
+              {renderChart("h-[80vh]")}
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
-      <div className="h-52">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={sampled} margin={MARGIN}>
-            <CartesianGrid stroke="#f0f0f0" />
-            <XAxis
-              dataKey="tick"
-              tick={TICK_STYLE}
-              tickLine={false}
-              axisLine={AXIS_LINE}
-            />
-            <YAxis
-              tick={TICK_STYLE}
-              tickLine={false}
-              axisLine={false}
-              width={50}
-            />
-            <Tooltip contentStyle={TOOLTIP_STYLE} />
-            <Line
-              isAnimationActive={false}
-              type="monotone"
-              dataKey="total"
-              stroke="#18181b"
-              dot={false}
-              strokeWidth={1.5}
-            />
-            <Line
-              isAnimationActive={false}
-              type="monotone"
-              dataKey={productKey}
-              stroke="#059669"
-              dot={false}
-              strokeWidth={1.5}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      {renderChart("h-52")}
     </div>
   )
 })
