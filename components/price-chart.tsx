@@ -1,10 +1,11 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { SlidersHorizontal } from "lucide-react"
+import { SlidersHorizontal, Maximize2 } from "lucide-react"
 import { PillTabs } from "@/components/pill-tabs"
 import {
   Bar,
+  Brush,
   Line,
   XAxis,
   YAxis,
@@ -16,6 +17,7 @@ import {
   BarChart,
 } from "recharts"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { priceData } from "@/lib/mock-data"
 
 type ChartView = "prices" | "spread" | "volume"
@@ -43,6 +45,14 @@ const SERIES_LABELS: Record<string, { label: string; color: string }> = {
 }
 
 const ADVANCED_KEYS = ["Depth", "Dom Mid", "Micro", "Deep VAMP"] as const
+
+const CHART_TICK = { fontSize: 10, fill: "#a1a1aa" }
+const TOOLTIP_STYLE = {
+  fontSize: 11,
+  borderRadius: 8,
+  border: "1px solid #e4e4e7",
+  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+}
 
 export function PriceChart() {
   const [view, setView] = useState<ChartView>("prices")
@@ -81,14 +91,45 @@ export function PriceChart() {
 
   const show = (key: string) => visible.has(key)
 
-  const chartProps = {
-    tick: { fontSize: 10, fill: "#a1a1aa" },
-    tooltipStyle: {
-      fontSize: 11,
-      borderRadius: 8,
-      border: "1px solid #e4e4e7",
-      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-    },
+  function renderChart(height: string) {
+    return (
+      <div className={height}>
+        <ResponsiveContainer width="100%" height="100%">
+          {view === "prices" ? (
+            <ComposedChart data={data} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+              <CartesianGrid stroke="#f0f0f0" />
+              <XAxis dataKey="tick" tick={CHART_TICK} tickLine={false} axisLine={{ stroke: "#e4e4e7" }} />
+              <YAxis domain={["auto", "auto"]} tick={CHART_TICK} tickLine={false} axisLine={false} width={50} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} />
+              {show("ask") && <Line isAnimationActive={false} type="monotone" dataKey="ask" stroke={seriesColors.ask} dot={false} strokeWidth={1} />}
+              {show("mid") && <Line isAnimationActive={false} type="monotone" dataKey="mid" stroke={seriesColors.mid} dot={false} strokeWidth={1.5} strokeDasharray="4 2" />}
+              {show("bid") && <Line isAnimationActive={false} type="monotone" dataKey="bid" stroke={seriesColors.bid} dot={false} strokeWidth={1} />}
+              {show("buyFill") && <Scatter isAnimationActive={false} dataKey="buyFill" fill={seriesColors.buyFill} shape="triangle" />}
+              {show("sellFill") && <Scatter isAnimationActive={false} dataKey="sellFill" fill={seriesColors.sellFill} shape="triangle" />}
+              <Brush dataKey="tick" height={12} stroke="#e4e4e7" fill="#fafafa" travellerWidth={6} tickFormatter={() => ""} />
+            </ComposedChart>
+          ) : view === "spread" ? (
+            <BarChart data={spreadData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+              <CartesianGrid stroke="#f0f0f0" />
+              <XAxis dataKey="tick" tick={CHART_TICK} tickLine={false} axisLine={{ stroke: "#e4e4e7" }} />
+              <YAxis tick={CHART_TICK} tickLine={false} axisLine={false} width={50} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} />
+              <Bar isAnimationActive={false} dataKey="spread" fill={seriesColors.spread} />
+              <Brush dataKey="tick" height={12} stroke="#e4e4e7" fill="#fafafa" travellerWidth={6} tickFormatter={() => ""} />
+            </BarChart>
+          ) : (
+            <BarChart data={volumeData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+              <CartesianGrid stroke="#f0f0f0" />
+              <XAxis dataKey="tick" tick={CHART_TICK} tickLine={false} axisLine={{ stroke: "#e4e4e7" }} />
+              <YAxis tick={CHART_TICK} tickLine={false} axisLine={false} width={50} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} />
+              <Bar isAnimationActive={false} dataKey="volume" fill={seriesColors.volume} />
+              <Brush dataKey="tick" height={12} stroke="#e4e4e7" fill="#fafafa" travellerWidth={6} tickFormatter={() => ""} />
+            </BarChart>
+          )}
+        </ResponsiveContainer>
+      </div>
+    )
   }
 
   return (
@@ -101,6 +142,15 @@ export function PriceChart() {
           <span className="text-[10px] text-zinc-400">
             {data.length.toLocaleString()} / 2,000
           </span>
+          <Dialog>
+            <DialogTrigger className="flex size-6 items-center justify-center rounded-md border border-zinc-200 text-zinc-500 hover:bg-zinc-50">
+              <Maximize2 className="size-3" />
+            </DialogTrigger>
+            <DialogContent className="!max-w-[95vw] w-full p-6">
+              <h3 className="text-sm font-semibold mb-2">Price &amp; Liquidity: EMERALDS</h3>
+              {renderChart("h-[80vh]")}
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -108,7 +158,6 @@ export function PriceChart() {
       <div className="flex items-center justify-between">
         <PillTabs id="chart-view" options={["prices", "spread", "volume"] as const} value={view} onChange={setView} />
 
-        {/* Series toggles (prices view only) */}
         {view === "prices" && (
             <div className="flex items-center gap-0.5">
               {SERIES_KEYS.map((key) => {
@@ -155,40 +204,7 @@ export function PriceChart() {
           )}
       </div>
 
-      {/* Chart */}
-      <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          {view === "prices" ? (
-            <ComposedChart data={data} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
-              <XAxis dataKey="tick" tick={chartProps.tick} tickLine={false} axisLine={{ stroke: "#e4e4e7" }} />
-              <YAxis domain={["auto", "auto"]} tick={chartProps.tick} tickLine={false} axisLine={false} width={50} />
-              <Tooltip contentStyle={chartProps.tooltipStyle} />
-              {show("ask") && <Line isAnimationActive={false} type="monotone" dataKey="ask" stroke={seriesColors.ask} dot={false} strokeWidth={1} />}
-              {show("mid") && <Line isAnimationActive={false} type="monotone" dataKey="mid" stroke={seriesColors.mid} dot={false} strokeWidth={1.5} strokeDasharray="4 2" />}
-              {show("bid") && <Line isAnimationActive={false} type="monotone" dataKey="bid" stroke={seriesColors.bid} dot={false} strokeWidth={1} />}
-              {show("buyFill") && <Scatter isAnimationActive={false} dataKey="buyFill" fill={seriesColors.buyFill} shape="triangle" />}
-              {show("sellFill") && <Scatter isAnimationActive={false} dataKey="sellFill" fill={seriesColors.sellFill} shape="triangle" />}
-            </ComposedChart>
-          ) : view === "spread" ? (
-            <BarChart data={spreadData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
-              <XAxis dataKey="tick" tick={chartProps.tick} tickLine={false} axisLine={{ stroke: "#e4e4e7" }} />
-              <YAxis tick={chartProps.tick} tickLine={false} axisLine={false} width={50} />
-              <Tooltip contentStyle={chartProps.tooltipStyle} />
-              <Bar isAnimationActive={false} dataKey="spread" fill={seriesColors.spread} />
-            </BarChart>
-          ) : (
-            <BarChart data={volumeData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
-              <XAxis dataKey="tick" tick={chartProps.tick} tickLine={false} axisLine={{ stroke: "#e4e4e7" }} />
-              <YAxis tick={chartProps.tick} tickLine={false} axisLine={false} width={50} />
-              <Tooltip contentStyle={chartProps.tooltipStyle} />
-              <Bar isAnimationActive={false} dataKey="volume" fill={seriesColors.volume} />
-            </BarChart>
-          )}
-        </ResponsiveContainer>
-      </div>
+      {renderChart("h-64")}
     </div>
   )
 }

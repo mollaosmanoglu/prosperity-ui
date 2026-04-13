@@ -10,30 +10,35 @@ const cards = [
     value: stats.totalPnl.toLocaleString(),
     subtitle: "Cumulative",
     trend: "up" as const,
+    tooltip: "Total profit and loss across all products",
   },
   {
     title: "Max Drawdown",
     value: stats.maxDrawdown.toLocaleString(),
     subtitle: "Peak-to-Trough",
     trend: "down" as const,
+    tooltip: "Largest peak-to-trough decline in PnL",
   },
   {
     title: "EMERALDS PnL",
     value: stats.emeraldsPnl.toLocaleString(),
     subtitle: "By Product",
     trend: "up" as const,
+    tooltip: "Profit and loss for EMERALDS only",
   },
   {
     title: "Position",
     value: stats.position.toString(),
     subtitle: "Current Inventory",
     trend: "down" as const,
+    tooltip: "Current net position (positive = long, negative = short)",
   },
   {
     title: "Microprice",
     value: stats.microprice.toFixed(2),
     subtitle: `Mid: ${stats.midPrice.toFixed(1)}`,
     trend: null,
+    tooltip: "Size-weighted midpoint price from the order book",
   },
 ]
 
@@ -53,7 +58,7 @@ export function StatCards() {
               <TooltipTrigger className="cursor-default">
                 <Info className="size-3 text-zinc-400" />
               </TooltipTrigger>
-              <TooltipContent>{card.title}</TooltipContent>
+              <TooltipContent>{card.tooltip}</TooltipContent>
             </Tooltip>
           </div>
           <div className="flex items-center gap-1.5">

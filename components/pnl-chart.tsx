@@ -40,7 +40,7 @@ export function PnlChart() {
       <div className="h-52">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={sampled} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
+            <CartesianGrid stroke="#f0f0f0" />
             <XAxis
               dataKey="tick"
               tick={{ fontSize: 10, fill: "#a1a1aa" }}

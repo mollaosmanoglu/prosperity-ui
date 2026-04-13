@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import { Play, Pause, RotateCcw } from "lucide-react"
+import { Play, Pause, RotateCcw, Upload } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 import { Slider } from "@/components/ui/slider"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { TOTAL_TICKS_COUNT } from "@/lib/mock-data"
 
 const MAX_TICK = TOTAL_TICKS_COUNT - 1
@@ -56,10 +57,17 @@ export function TickScrubber() {
 
   return (
     <div className="flex flex-1 items-center gap-3">
-      <button
-        className="relative flex size-7 shrink-0 items-center justify-center rounded-md bg-zinc-900 text-white"
-        onClick={togglePlay}
-      >
+      <Tooltip>
+        <TooltipTrigger className="flex size-7 shrink-0 items-center justify-center rounded-md text-zinc-400 hover:text-zinc-900">
+          <Upload className="size-3.5" />
+        </TooltipTrigger>
+        <TooltipContent>Upload .log file</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger
+          className="relative flex size-7 shrink-0 items-center justify-center rounded-md bg-zinc-900 text-white"
+          onClick={togglePlay}
+        >
         <AnimatePresence mode="wait">
           {atEnd ? (
             <motion.span
@@ -100,7 +108,9 @@ export function TickScrubber() {
             transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
           />
         )}
-      </button>
+      </TooltipTrigger>
+        <TooltipContent>{atEnd ? "Restart" : playing ? "Pause" : "Play"}</TooltipContent>
+      </Tooltip>
       <span className="text-[11px] font-mono text-zinc-500 shrink-0">
         {tick.toLocaleString()} / {MAX_TICK.toLocaleString()}
       </span>

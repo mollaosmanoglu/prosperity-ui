@@ -147,3 +147,16 @@
     @apply font-sans;
   }
 }
+
+/* Recharts Brush */
+.recharts-brush {
+  user-select: none;
+}
+.recharts-brush-slide {
+  fill: #18181b;
+  fill-opacity: 0.12;
+}
+.recharts-brush-traveller rect {
+  fill: #a1a1aa;
+  rx: 2;
+}
