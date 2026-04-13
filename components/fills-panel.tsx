@@ -25,7 +25,7 @@ export function FillsPanel() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <TableProperties className="size-4 text-zinc-500" />
-          <h3 className="text-sm font-semibold">Own Fills Details</h3>
+          <h3 className="text-xs font-semibold">Own Fills Details</h3>
         </div>
         <label className="flex items-center gap-1.5 cursor-pointer">
           <Checkbox />

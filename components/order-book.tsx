@@ -10,7 +10,7 @@ export function OrderBook() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <BarChart3 className="size-4 text-zinc-500" />
-          <h3 className="text-sm font-semibold">Order Book: EMERALDS</h3>
+          <h3 className="text-xs font-semibold">Order Book: EMERALDS</h3>
         </div>
         <div className="flex items-center gap-1 text-[10px]">
           <span className="text-zinc-500">SPREAD:</span>

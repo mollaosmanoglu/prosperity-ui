@@ -14,7 +14,7 @@ export function ProductSummary() {
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
       <div className="flex items-center gap-1.5">
-        <h3 className="text-sm font-semibold">Product Summary: EMERALDS</h3>
+        <h3 className="text-xs font-semibold">Product Summary: EMERALDS</h3>
         <Info className="size-3 text-zinc-400" />
       </div>
       <div className="flex flex-col gap-1.5">

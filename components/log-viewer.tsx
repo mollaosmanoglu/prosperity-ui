@@ -7,12 +7,12 @@ export function LogViewer() {
   return (
     <Tabs defaultValue="sandbox">
       <TabsList>
-        <TabsTrigger value="sandbox" className="gap-1.5">
-          <Terminal className="size-3.5" />
+        <TabsTrigger value="sandbox" className="gap-1.5 text-xs">
+          <Terminal className="size-3" />
           Sandbox Logs
         </TabsTrigger>
-        <TabsTrigger value="algorithm" className="gap-1.5">
-          <Code className="size-3.5" />
+        <TabsTrigger value="algorithm" className="gap-1.5 text-xs">
+          <Code className="size-3" />
           Algorithm Logs
         </TabsTrigger>
       </TabsList>

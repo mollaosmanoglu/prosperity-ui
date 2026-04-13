@@ -18,7 +18,7 @@ export function PnlChart() {
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold">PnL Performance</h3>
+        <h3 className="text-xs font-semibold">PnL Performance</h3>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1">

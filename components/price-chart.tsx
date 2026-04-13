@@ -136,7 +136,7 @@ export function PriceChart() {
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold">Price &amp; Liquidity: EMERALDS</h3>
+        <h3 className="text-xs font-semibold">Price &amp; Liquidity: EMERALDS</h3>
         <div className="flex items-center gap-2">
           <PillTabs id="resolution" options={["sampled", "full"] as const} value={resolution} onChange={setResolution} />
           <span className="text-[10px] text-zinc-400">
@@ -147,7 +147,7 @@ export function PriceChart() {
               <Maximize2 className="size-3" />
             </DialogTrigger>
             <DialogContent className="!max-w-[95vw] w-full p-6">
-              <h3 className="text-sm font-semibold mb-2">Price &amp; Liquidity: EMERALDS</h3>
+              <h3 className="text-xs font-semibold mb-2">Price &amp; Liquidity: EMERALDS</h3>
               {renderChart("h-[80vh]")}
             </DialogContent>
           </Dialog>
