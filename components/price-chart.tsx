@@ -104,8 +104,8 @@ export function PriceChart() {
               {show("ask") && <Line isAnimationActive={false} type="monotone" dataKey="ask" stroke={seriesColors.ask} dot={false} strokeWidth={1} />}
               {show("mid") && <Line isAnimationActive={false} type="monotone" dataKey="mid" stroke={seriesColors.mid} dot={false} strokeWidth={1.5} strokeDasharray="4 2" />}
               {show("bid") && <Line isAnimationActive={false} type="monotone" dataKey="bid" stroke={seriesColors.bid} dot={false} strokeWidth={1} />}
-              {show("buyFill") && <Scatter isAnimationActive={false} dataKey="buyFill" fill={seriesColors.buyFill} shape="triangle" />}
-              {show("sellFill") && <Scatter isAnimationActive={false} dataKey="sellFill" fill={seriesColors.sellFill} shape="triangle" />}
+              {show("buyFill") && <Scatter isAnimationActive={false} dataKey="buyFill" fill={seriesColors.buyFill} shape="circle" r={1} />}
+              {show("sellFill") && <Scatter isAnimationActive={false} dataKey="sellFill" fill={seriesColors.sellFill} shape="circle" r={1} />}
               <Brush dataKey="tick" height={12} stroke="#e4e4e7" fill="#fafafa" travellerWidth={6} tickFormatter={() => ""} />
             </ComposedChart>
           ) : view === "spread" ? (
@@ -143,8 +143,9 @@ export function PriceChart() {
             {data.length.toLocaleString()} / 2,000
           </span>
           <Dialog>
-            <DialogTrigger className="flex size-6 items-center justify-center rounded-md border border-zinc-200 text-zinc-500 hover:bg-zinc-50">
+            <DialogTrigger className="flex items-center gap-1 rounded-md border border-zinc-200 px-2 py-1 text-[10px] text-zinc-500 hover:bg-zinc-50">
               <Maximize2 className="size-3" />
+              Expand
             </DialogTrigger>
             <DialogContent className="!max-w-[95vw] w-full p-6">
               <h3 className="text-xs font-semibold mb-2">Price &amp; Liquidity: EMERALDS</h3>
