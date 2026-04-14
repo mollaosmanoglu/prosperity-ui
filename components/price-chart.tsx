@@ -5,14 +5,12 @@ import { SlidersHorizontal, Maximize2 } from "lucide-react"
 import { PillTabs } from "@/components/pill-tabs"
 import {
   Bar,
-  Brush,
   Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Scatter,
   ComposedChart,
   BarChart,
 } from "recharts"
@@ -54,7 +52,14 @@ const TOOLTIP_STYLE = {
   border: "1px solid #e4e4e7",
   boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
 }
-const EMPTY_TICK = () => ""
+
+// Only render a circle where a fill value exists — skips nulls entirely
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const fillDot = (color: string) => (props: any) => {
+  const { cx, cy, payload, dataKey } = props
+  if (payload[dataKey] == null || !cx || !cy) return <g />
+  return <circle cx={cx} cy={cy} r={3} fill={color} stroke="#fff" strokeWidth={1} />
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function PriceTooltip({ active, payload, label }: any) {
@@ -129,12 +134,12 @@ const PriceChartInner = memo(function PriceChartInner({ data: fullData, product,
   const data = resolution === "sampled" ? sampledData : fullData
 
   const spreadData = useMemo(
-    () => data.map((d) => ({ tick: d.tick, spread: Math.round((d.ask - d.bid) * 10) / 10 })),
-    [data]
+    () => sampledData.map((d) => ({ tick: d.tick, spread: Math.round((d.ask - d.bid) * 10) / 10 })),
+    [sampledData]
   )
   const volumeData = useMemo(
-    () => data.map((d, i) => ({ tick: d.tick, volume: Math.round((d.ask - d.bid) * (3 + (i % 5) + 1)) })),
-    [data]
+    () => sampledData.map((d, i) => ({ tick: d.tick, volume: Math.round((d.ask - d.bid) * (3 + (i % 5) + 1)) })),
+    [sampledData]
   )
 
   function toggleSeries(key: string) {
@@ -170,9 +175,8 @@ const PriceChartInner = memo(function PriceChartInner({ data: fullData, product,
               {show("ask") && <Line isAnimationActive={false} type="monotone" dataKey="ask" stroke={seriesColors.ask} dot={false} strokeWidth={1} />}
               {show("mid") && <Line isAnimationActive={false} type="monotone" dataKey="mid" stroke={seriesColors.mid} dot={false} strokeWidth={1.5} strokeDasharray="4 2" />}
               {show("bid") && <Line isAnimationActive={false} type="monotone" dataKey="bid" stroke={seriesColors.bid} dot={false} strokeWidth={1} />}
-              {show("buyFill") && <Scatter isAnimationActive={false} dataKey="buyFill" fill={seriesColors.buyFill} shape="circle" r={1} />}
-              {show("sellFill") && <Scatter isAnimationActive={false} dataKey="sellFill" fill={seriesColors.sellFill} shape="circle" r={1} />}
-              <Brush dataKey="tick" height={12} stroke="#e4e4e7" fill="#fafafa" travellerWidth={6} tickFormatter={EMPTY_TICK} />
+              {show("buyFill") && <Line isAnimationActive={false} type="monotone" dataKey="buyFill" stroke="none" dot={fillDot(seriesColors.buyFill)} connectNulls={false} />}
+              {show("sellFill") && <Line isAnimationActive={false} type="monotone" dataKey="sellFill" stroke="none" dot={fillDot(seriesColors.sellFill)} connectNulls={false} />}
             </ComposedChart>
           ) : view === "spread" ? (
             <BarChart data={spreadData} margin={CHART_MARGIN}>
@@ -181,7 +185,6 @@ const PriceChartInner = memo(function PriceChartInner({ data: fullData, product,
               <YAxis tick={CHART_TICK} tickLine={false} axisLine={false} width={50} />
               <Tooltip contentStyle={TOOLTIP_STYLE} />
               <Bar isAnimationActive={false} dataKey="spread" fill={seriesColors.spread} />
-              <Brush dataKey="tick" height={12} stroke="#e4e4e7" fill="#fafafa" travellerWidth={6} tickFormatter={EMPTY_TICK} />
             </BarChart>
           ) : (
             <BarChart data={volumeData} margin={CHART_MARGIN}>
@@ -190,13 +193,12 @@ const PriceChartInner = memo(function PriceChartInner({ data: fullData, product,
               <YAxis tick={CHART_TICK} tickLine={false} axisLine={false} width={50} />
               <Tooltip contentStyle={TOOLTIP_STYLE} />
               <Bar isAnimationActive={false} dataKey="volume" fill={seriesColors.volume} />
-              <Brush dataKey="tick" height={12} stroke="#e4e4e7" fill="#fafafa" travellerWidth={6} tickFormatter={EMPTY_TICK} />
             </BarChart>
           )}
         </ResponsiveContainer>
       </div>
     )
-  }, [view, data, spreadData, volumeData, show])
+  }, [view, data, spreadData, volumeData, visible])
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
