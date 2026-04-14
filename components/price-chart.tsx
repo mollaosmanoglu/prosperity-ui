@@ -226,9 +226,9 @@ const PriceChartInner = memo(function PriceChartInner({ data: fullData, product 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-xs font-semibold">Price &amp; Liquidity: {product}</h3>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <PillTabs id="resolution" options={["sampled", "full"] as const} value={resolution} onChange={setResolution} />
           <span className="text-[10px] text-zinc-400">
             {data.length.toLocaleString()} / {fullData.length.toLocaleString()}
@@ -247,11 +247,11 @@ const PriceChartInner = memo(function PriceChartInner({ data: fullData, product 
       </div>
 
       {/* View tabs + series toggles */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <PillTabs id="chart-view" options={["prices", "spread", "volume"] as const} value={view} onChange={setView} />
 
         {view === "prices" && (
-            <div className="flex items-center gap-0.5">
+            <div className="flex flex-wrap items-center gap-0.5">
               {SERIES_KEYS.map((key) => {
                 const s = SERIES_LABELS[key]
                 const active = visible.has(key)

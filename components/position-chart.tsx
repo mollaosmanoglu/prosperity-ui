@@ -72,7 +72,7 @@ const PositionChartInner = memo(function PositionChartInner({ data, product }: {
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-xs font-semibold">Position: {product}</h3>
         <Dialog>
           <DialogTrigger className="flex items-center gap-1 rounded-md border border-zinc-200 px-2 py-1 text-[10px] text-zinc-500 hover:bg-zinc-50">
@@ -119,7 +119,7 @@ const PositionAllProductsInner = memo(function PositionAllProductsInner({ data, 
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-xs font-semibold">Position: Normalized Portfolio</h3>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-3">
@@ -174,7 +174,7 @@ const PositionComparisonInner = memo(function PositionComparisonInner({ data, ru
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-xs font-semibold">Position Comparison: {product}</h3>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-3">

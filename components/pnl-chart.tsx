@@ -72,10 +72,10 @@ const PnlChartInner = memo(function PnlChartInner({ data, product }: { data: Pnl
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-xs font-semibold">PnL Performance</h3>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
             <div className="flex items-center gap-1">
               <div className="size-2 rounded-full bg-zinc-900" />
               <span className="text-[10px] text-zinc-500">TOTAL</span>
@@ -134,10 +134,10 @@ const PnlAllProductsInner = memo(function PnlAllProductsInner({ data, products }
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-xs font-semibold">PnL Performance</h3>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
             <div className="flex items-center gap-1">
               <div className="size-2 rounded-full bg-zinc-900" />
               <span className="text-[10px] text-zinc-500">TOTAL</span>
@@ -192,10 +192,10 @@ const PnlComparisonInner = memo(function PnlComparisonInner({ data, runs, produc
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-xs font-semibold">PnL Comparison: {product}</h3>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
             {runs.map(r => (
               <div key={r.name} className="flex items-center gap-1">
                 <div className="size-2 rounded-full" style={{ backgroundColor: r.color }} />

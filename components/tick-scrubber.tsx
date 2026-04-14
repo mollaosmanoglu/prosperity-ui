@@ -117,7 +117,7 @@ export function TickScrubber() {
       </TooltipTrigger>
         <TooltipContent>{atEnd ? "Restart" : playing ? "Pause" : "Play"}</TooltipContent>
       </Tooltip>
-      <span className="text-[11px] font-mono text-zinc-500 shrink-0">
+      <span className="hidden sm:inline text-[11px] font-mono text-zinc-500 shrink-0">
         {currentTick.toLocaleString()} / {maxTick.toLocaleString()}
       </span>
       <Slider

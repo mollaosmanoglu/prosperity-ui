@@ -23,7 +23,7 @@ export const OrderBook = memo(function OrderBook() {
   const bidsHeavy = pressurePct > 50
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
+    <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-2 md:p-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">

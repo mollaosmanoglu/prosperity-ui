@@ -96,7 +96,7 @@ export const StatCards = memo(function StatCards() {
   ]
 
   return (
-    <div className="grid grid-cols-5 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
       {cards.map((card) => (
         <div
           key={card.title}
