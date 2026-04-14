@@ -147,8 +147,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const runs = useMemo<RunInfo[]>(() => {
     const mockLast = mockPnlData[mockPnlData.length - 1]
+    const mockTrades = mockPriceData.filter(p => p.buyFill != null || p.sellFill != null).length
     const list: RunInfo[] = [
-      { name: "Tutorial Sub", totalPnl: Math.round((mockLast?.total ?? 0) * 1000) / 1000, trades: 0 },
+      { name: "Tutorial Sub", totalPnl: Math.round((mockLast?.total ?? 0) * 1000) / 1000, trades: mockTrades },
     ]
     for (const [name, d] of allRuns) {
       const pnl = getPnlData(d)

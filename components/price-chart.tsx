@@ -43,7 +43,7 @@ const SERIES_LABELS: Record<string, { label: string; color: string }> = {
 }
 
 const ADVANCED_KEYS = ["Depth", "Dom Mid", "Micro", "Deep VAMP"] as const
-const SAMPLE_TARGET = 500
+const SAMPLE_TARGET = 200
 
 const CHART_TICK = { fontSize: 10, fill: "#a1a1aa" }
 const CHART_MARGIN = { top: 5, right: 5, bottom: 5, left: 5 }

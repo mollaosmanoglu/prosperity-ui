@@ -32,7 +32,7 @@ const PRODUCT_COLORS: Record<string, string> = {
   TOMATOES: "#e11d48",
 }
 const DEFAULT_COLOR = "#2563eb"
-const SAMPLE_TARGET = 500
+const SAMPLE_TARGET = 200
 
 export function PnlChart() {
   const { pnlDataFull, selectedProduct } = useData()

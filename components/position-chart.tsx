@@ -28,7 +28,7 @@ const TOOLTIP_STYLE = {
   border: "1px solid #e4e4e7",
   boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
 }
-const SAMPLE_TARGET = 500
+const SAMPLE_TARGET = 200
 
 export function PositionChart() {
   const { positionDataFull, selectedProduct } = useData()
