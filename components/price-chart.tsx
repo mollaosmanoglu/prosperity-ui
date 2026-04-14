@@ -111,14 +111,15 @@ function PriceTooltip({ active, payload, label }: any) {
 }
 
 export function PriceChart() {
-  const { priceDataFull, selectedProduct, currentTick, totalTicks, playing } = useDashboard()
-  const pct = (currentTick / Math.max(totalTicks - 1, 1)) * 100
-  return (
-    <PriceChartInner data={priceDataFull} product={selectedProduct} cursorPct={playing ? pct : null} />
-  )
+  const { priceDataFull, selectedProduct, currentTick, totalTicks } = useDashboard()
+  const progress = currentTick > 0 ? currentTick / Math.max(totalTicks - 1, 1) : null
+  return <PriceChartInner data={priceDataFull} product={selectedProduct} cursorProgress={progress} />
 }
 
-const PriceChartInner = memo(function PriceChartInner({ data: fullData, product, cursorPct }: { data: PricePoint[], product: string, cursorPct: number | null }) {
+// margin.left(5) + yAxis(50) = 55px left offset, margin.right(5) = 5px right offset
+const CURSOR_STYLE_50 = (p: number) => ({ left: `calc(55px + (100% - 60px) * ${p})`, width: 2, background: '#18181b', opacity: 0.2 })
+
+const PriceChartInner = memo(function PriceChartInner({ data: fullData, product, cursorProgress }: { data: PricePoint[], product: string, cursorProgress: number | null }) {
   const [view, setView] = useState<ChartView>("prices")
   const [resolution, setResolution] = useState<"sampled" | "full">("sampled")
   const [visible, setVisible] = useState<Set<string>>(new Set(SERIES_KEYS))
@@ -159,7 +160,7 @@ const PriceChartInner = memo(function PriceChartInner({ data: fullData, product,
   const renderChart = useCallback((height: string) => {
     return (
       <div className={height}>
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           {view === "prices" ? (
             <ComposedChart data={data} margin={CHART_MARGIN}>
               <CartesianGrid stroke="#f0f0f0" />
@@ -272,7 +273,7 @@ const PriceChartInner = memo(function PriceChartInner({ data: fullData, product,
 
       <div className="relative overflow-hidden">
         {renderChart("h-64")}
-        {cursorPct != null && <div className="absolute top-1 bottom-5 pointer-events-none" style={{ left: `${cursorPct}%`, width: 2, background: '#18181b', opacity: 0.2 }} />}
+        {cursorProgress != null && <div className="absolute top-1 bottom-5 pointer-events-none" style={CURSOR_STYLE_50(cursorProgress)} />}
       </div>
     </div>
   )

@@ -17,7 +17,7 @@ export default function Home() {
   return (
     <DashboardProvider>
     <div className="relative min-h-screen bg-zinc-100 text-zinc-900 font-sans">
-      <img src="/imc.png" alt="IMC" className="fixed top-4 left-4 h-48 opacity-40" />
+
       <div className="mx-auto max-w-7xl p-4 space-y-4">
         <div className="sticky top-0 z-10 -mx-4 px-4 py-2 bg-zinc-100 flex items-center gap-3">
           <TickScrubber />

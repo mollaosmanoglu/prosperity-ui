@@ -33,12 +33,14 @@ const DEFAULT_COLOR = "#2563eb"
 
 // Thin wrapper: re-renders on tick (cheap), passes stable refs to inner
 export function PnlChart() {
-  const { pnlDataFull, selectedProduct, currentTick, totalTicks, playing } = useDashboard()
-  const pct = (currentTick / Math.max(totalTicks - 1, 1)) * 100
-  return <PnlChartInner data={pnlDataFull} product={selectedProduct} cursorPct={playing ? pct : null} />
+  const { pnlDataFull, selectedProduct, currentTick, totalTicks } = useDashboard()
+  const progress = currentTick > 0 ? currentTick / Math.max(totalTicks - 1, 1) : null
+  return <PnlChartInner data={pnlDataFull} product={selectedProduct} cursorProgress={progress} />
 }
 
-const PnlChartInner = memo(function PnlChartInner({ data, product, cursorPct }: { data: PnlPoint[], product: string, cursorPct: number | null }) {
+const CURSOR_PNL = (p: number) => ({ left: `calc(55px + (100% - 60px) * ${p})`, width: 2, background: '#18181b', opacity: 0.2 })
+
+const PnlChartInner = memo(function PnlChartInner({ data, product, cursorProgress }: { data: PnlPoint[], product: string, cursorProgress: number | null }) {
   const sampled = useMemo(() => data.filter((_, i) => i % 10 === 0), [data])
   const productKey = product.toLowerCase()
   const productColor = PRODUCT_COLORS[product] ?? DEFAULT_COLOR
@@ -46,7 +48,7 @@ const PnlChartInner = memo(function PnlChartInner({ data, product, cursorPct }: 
   function renderChart(height: string) {
     return (
       <div className={height}>
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <LineChart data={sampled} margin={MARGIN}>
             <CartesianGrid stroke="#f0f0f0" />
             <XAxis dataKey="tick" tick={TICK_STYLE} tickLine={false} axisLine={AXIS_LINE} />
@@ -89,7 +91,7 @@ const PnlChartInner = memo(function PnlChartInner({ data, product, cursorPct }: 
       </div>
       <div className="relative overflow-hidden">
         {renderChart("h-52")}
-        {cursorPct != null && <div className="absolute top-1 bottom-1 pointer-events-none" style={{ left: `${cursorPct}%`, width: 2, background: '#18181b', opacity: 0.2 }} />}
+        {cursorProgress != null && <div className="absolute top-1 bottom-1 pointer-events-none" style={CURSOR_PNL(cursorProgress)} />}
       </div>
     </div>
   )

@@ -29,18 +29,21 @@ const TOOLTIP_STYLE = {
 
 // Thin wrapper: re-renders on tick (cheap), passes stable refs to inner
 export function PositionChart() {
-  const { positionDataFull, selectedProduct, currentTick, totalTicks, playing } = useDashboard()
-  const pct = (currentTick / Math.max(totalTicks - 1, 1)) * 100
-  return <PositionChartInner data={positionDataFull} product={selectedProduct} cursorPct={playing ? pct : null} />
+  const { positionDataFull, selectedProduct, currentTick, totalTicks } = useDashboard()
+  const progress = currentTick > 0 ? currentTick / Math.max(totalTicks - 1, 1) : null
+  return <PositionChartInner data={positionDataFull} product={selectedProduct} cursorProgress={progress} />
 }
 
-const PositionChartInner = memo(function PositionChartInner({ data, product, cursorPct }: { data: PositionPoint[], product: string, cursorPct: number | null }) {
+// margin.left(5) + yAxis(30) = 35px, margin.right(5) = 5px
+const CURSOR_POS = (p: number) => ({ left: `calc(35px + (100% - 40px) * ${p})`, width: 2, background: '#18181b', opacity: 0.2 })
+
+const PositionChartInner = memo(function PositionChartInner({ data, product, cursorProgress }: { data: PositionPoint[], product: string, cursorProgress: number | null }) {
   const sampled = useMemo(() => data.filter((_, i) => i % 10 === 0), [data])
 
   function renderChart(height: string) {
     return (
       <div className={height}>
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <LineChart data={sampled} margin={MARGIN}>
             <CartesianGrid stroke="#f0f0f0" />
             <XAxis dataKey="tick" tick={TICK_STYLE} tickLine={false} axisLine={AXIS_LINE} />
@@ -71,7 +74,7 @@ const PositionChartInner = memo(function PositionChartInner({ data, product, cur
       </div>
       <div className="relative overflow-hidden">
         {renderChart("h-44")}
-        {cursorPct != null && <div className="absolute top-1 bottom-1 pointer-events-none" style={{ left: `${cursorPct}%`, width: 2, background: '#18181b', opacity: 0.2 }} />}
+        {cursorProgress != null && <div className="absolute top-1 bottom-1 pointer-events-none" style={CURSOR_POS(cursorProgress)} />}
       </div>
     </div>
   )
