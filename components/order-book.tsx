@@ -2,11 +2,12 @@
 
 import { memo, useMemo } from "react"
 import { BarChart3 } from "lucide-react"
-import { useDashboard } from "@/lib/dashboard-context"
+import { useData, useTick } from "@/lib/dashboard-context"
 import { AnimatedNumber } from "@/components/animated-number"
 
 export const OrderBook = memo(function OrderBook() {
-  const { orderBook, selectedProduct } = useDashboard()
+  const { selectedProduct } = useData()
+  const { orderBook } = useTick()
 
   // Market pressure: bid volume vs ask volume
   const { pressure, pressurePct } = useMemo(() => {

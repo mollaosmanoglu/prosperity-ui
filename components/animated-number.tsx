@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react"
 import { useMotionValue, animate, motion, useTransform } from "motion/react"
-import { useDashboard } from "@/lib/dashboard-context"
+import { useTick } from "@/lib/dashboard-context"
 
 interface AnimatedNumberProps {
   value: number
@@ -11,7 +11,7 @@ interface AnimatedNumberProps {
 }
 
 export function AnimatedNumber({ value, format = (n) => n.toLocaleString(), className }: AnimatedNumberProps) {
-  const { playing } = useDashboard()
+  const { playing } = useTick()
 
   // During playback: plain span, zero animation overhead
   if (playing) return <span className={className}>{format(value)}</span>

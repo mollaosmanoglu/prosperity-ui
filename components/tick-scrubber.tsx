@@ -5,10 +5,11 @@ import { Play, Pause, RotateCcw, Upload } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 import { Slider } from "@/components/ui/slider"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { useDashboard } from "@/lib/dashboard-context"
+import { useData, useTick } from "@/lib/dashboard-context"
 
 export function TickScrubber() {
-  const { currentTick, setCurrentTick, playing, setPlaying, totalTicks, loadLog } = useDashboard()
+  const { totalTicks, loadLog } = useData()
+  const { currentTick, setCurrentTick, playing, setPlaying } = useTick()
   const rafRef = useRef<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -111,11 +112,7 @@ export function TickScrubber() {
           )}
         </AnimatePresence>
         {playing && (
-          <motion.span
-            className="absolute inset-0 rounded-md bg-white/20"
-            animate={{ opacity: [0, 1, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-          />
+          <span className="absolute inset-0 rounded-md bg-white/20 animate-pulse" />
         )}
       </TooltipTrigger>
         <TooltipContent>{atEnd ? "Restart" : playing ? "Pause" : "Play"}</TooltipContent>

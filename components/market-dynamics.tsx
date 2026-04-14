@@ -2,10 +2,11 @@
 
 import { memo } from "react"
 import { Info } from "lucide-react"
-import { useDashboard } from "@/lib/dashboard-context"
+import { useData, useTick } from "@/lib/dashboard-context"
 
 export const MarketDynamics = memo(function MarketDynamics() {
-  const { marketDynamics, selectedProduct } = useDashboard()
+  const { selectedProduct } = useData()
+  const { marketDynamics } = useTick()
 
   // Parse numeric values for bar widths
   const volNum = parseFloat(marketDynamics.volatility) || 0

@@ -2,12 +2,12 @@
 
 import { useState } from "react"
 import { PillTabs } from "@/components/pill-tabs"
-import { useDashboard } from "@/lib/dashboard-context"
+import { useData } from "@/lib/dashboard-context"
 
 const sources = ["Tutorial Sub", "IMC Day Replay"] as const
 
 export function Filters() {
-  const { products, selectedProduct, setSelectedProduct } = useDashboard()
+  const { products, selectedProduct, setSelectedProduct } = useData()
   const [source, setSource] = useState<(typeof sources)[number]>("Tutorial Sub")
 
   const productOptions = ["All Products", ...products] as const

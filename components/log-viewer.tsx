@@ -3,10 +3,11 @@
 import { memo, useMemo, useState } from "react"
 import { Terminal, Code } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { useDashboard } from "@/lib/dashboard-context"
+import { useData, useTick } from "@/lib/dashboard-context"
 
 export const LogViewer = memo(function LogViewer() {
-  const { logs, currentTick } = useDashboard()
+  const { logs } = useData()
+  const { currentTick } = useTick()
 
   const currentLog = useMemo(() => {
     if (!logs.length) return null

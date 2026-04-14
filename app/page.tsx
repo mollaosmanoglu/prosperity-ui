@@ -1,5 +1,6 @@
 "use client"
 
+import "@/lib/wdyr"
 import { DashboardProvider } from "@/lib/dashboard-context"
 import { TickScrubber } from "@/components/tick-scrubber"
 import { StatCards } from "@/components/stat-cards"

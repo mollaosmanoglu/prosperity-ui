@@ -2,11 +2,12 @@
 
 import { memo } from "react"
 import { Info } from "lucide-react"
-import { useDashboard } from "@/lib/dashboard-context"
+import { useData, useTick } from "@/lib/dashboard-context"
 import { AnimatedNumber } from "@/components/animated-number"
 
 export const ProductSummary = memo(function ProductSummary() {
-  const { productSummary, selectedProduct } = useDashboard()
+  const { selectedProduct } = useData()
+  const { productSummary } = useTick()
 
   const rows = [
     { label: "Position", value: productSummary.position, format: (n: number) => Math.round(n).toString(), color: productSummary.position < 0 ? "text-red-500" : productSummary.position > 0 ? "text-emerald-500" : "" },

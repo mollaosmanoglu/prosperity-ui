@@ -3,11 +3,11 @@
 import { memo } from "react"
 import { Info, TrendingUp, TrendingDown } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { useDashboard } from "@/lib/dashboard-context"
+import { useTick } from "@/lib/dashboard-context"
 import { AnimatedNumber } from "@/components/animated-number"
 
 export const StatCards = memo(function StatCards() {
-  const { stats } = useDashboard()
+  const { stats } = useTick()
 
   const cards = [
     {

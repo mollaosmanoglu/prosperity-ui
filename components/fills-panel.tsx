@@ -10,10 +10,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { useDashboard } from "@/lib/dashboard-context"
+import { useTick } from "@/lib/dashboard-context"
 
 export const FillsPanel = memo(function FillsPanel() {
-  const { fills } = useDashboard()
+  const { fills } = useTick()
   const [expanded, setExpanded] = useState(false)
   const visible = expanded ? fills : fills.slice(0, 5)
   const hasMore = fills.length > 5
