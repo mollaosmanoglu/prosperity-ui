@@ -55,6 +55,60 @@ Open [localhost:3000](http://localhost:3000).
 | Charts   | Recharts with custom zoom and cursor sync      |
 | State    | React Context with tick-scrubber coordination  |
 
+## Architecture
+
+```
+[User Input]                    [System Boundary: prosperity-ui]              [Data Layer]
+
+┌──────────────┐                                                         ┌───────────────┐
+│   Browser    │                                                         │  Prosperity   │
+│ (Dashboard)  │                                                         │  JSON Logs    │
+└──────┬───────┘                                                         │  (Uploaded)   │
+       │                                                                 └───────┬───────┘
+       │ Drag-and-drop                                                           │
+       │                                                                         │
+       ▼                                                                         │
+┌─────────────────────────────────────────────────────────────────────┐         │
+│                      Next.js 16 / React 19                           │         │
+│                                                                      │         │
+│  ┌────────────────────────────────────────────────────────────┐     │         │
+│  │           Dashboard Context (State Management)             │     │         │
+│  │                                                            │     │         │
+│  │  • Current tick                                            │     │◀────────┘
+│  │  • Selected product                                        │     │ Parse JSON
+│  │  • Selected run                                            │     │
+│  │  • Filters (product/run)                                   │     │
+│  └───────────────────────┬────────────────────────────────────┘     │
+│                          │                                           │
+│                          ▼                                           │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │                   Component Layer                            │   │
+│  │                                                              │   │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │   │
+│  │  │ Tick         │  │ Stat Cards   │  │  Filters     │      │   │
+│  │  │ Scrubber     │  │              │  │              │      │   │
+│  │  └──────────────┘  └──────────────┘  └──────────────┘      │   │
+│  │                                                              │   │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │   │
+│  │  │ Price Chart  │  │  PnL Chart   │  │ Position     │      │   │
+│  │  │ (Recharts)   │  │ (Recharts)   │  │  Chart       │      │   │
+│  │  └──────────────┘  └──────────────┘  └──────────────┘      │   │
+│  │                                                              │   │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │   │
+│  │  │ Order Book   │  │ Runs Panel   │  │ Fills Panel  │      │   │
+│  │  │              │  │              │  │              │      │   │
+│  │  └──────────────┘  └──────────────┘  └──────────────┘      │   │
+│  │                                                              │   │
+│  │  ┌──────────────┐  ┌──────────────┐                         │   │
+│  │  │ Product      │  │ Market       │                         │   │
+│  │  │ Summary      │  │ Dynamics     │                         │   │
+│  │  └──────────────┘  └──────────────┘                         │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────┘
+
+Tech: Recharts (charts), Motion (animations), shadcn/ui (components)
+```
+
 ## License
 
 MIT
