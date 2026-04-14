@@ -30,10 +30,19 @@ const TOOLTIP_STYLE = {
 }
 const SAMPLE_TARGET = 200
 
+const ALL_PRODUCT_COLORS: Record<string, string> = {
+  EMERALDS: "#059669",
+  TOMATOES: "#e11d48",
+}
+const DEFAULT_PRODUCT_COLOR = "#2563eb"
+
 export function PositionChart() {
-  const { positionDataFull, selectedProduct, comparisonPosition, comparisonRuns } = useData()
+  const { positionDataFull, selectedProduct, products, comparisonPosition, comparisonRuns, allProductsPosition } = useData()
   if (comparisonPosition) {
     return <PositionComparisonInner data={comparisonPosition} runs={comparisonRuns} product={selectedProduct} />
+  }
+  if (selectedProduct === "ALL" && allProductsPosition) {
+    return <PositionAllProductsInner data={allProductsPosition} products={products} />
   }
   return <PositionChartInner data={positionDataFull} product={selectedProduct} />
 }
@@ -75,6 +84,63 @@ const PositionChartInner = memo(function PositionChartInner({ data, product }: {
             {renderChart("h-[80vh]")}
           </DialogContent>
         </Dialog>
+      </div>
+      <div className="relative overflow-hidden">
+        {renderChart("h-44")}
+        <ChartCursor style={CURSOR_STYLE} />
+      </div>
+    </div>
+  )
+})
+
+const NORM_Y_DOMAIN: [number, number] = [-1.1, 1.1]
+
+const PositionAllProductsInner = memo(function PositionAllProductsInner({ data, products }: { data: Record<string, number>[], products: string[] }) {
+  const sampled = useMemo(() => lttb(data, SAMPLE_TARGET, d => d[products[0]?.toLowerCase()] ?? 0), [data, products])
+
+  function renderChart(height: string) {
+    return (
+      <div className={height}>
+        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+          <LineChart data={sampled} margin={MARGIN}>
+            <CartesianGrid stroke="#f0f0f0" />
+            <XAxis dataKey="tick" tick={TICK_STYLE} tickLine={false} axisLine={AXIS_LINE} />
+            <YAxis domain={NORM_Y_DOMAIN} tick={TICK_STYLE} tickLine={false} axisLine={false} width={30} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <ReferenceLine y={0} stroke="#a1a1aa" strokeDasharray="3 3" />
+            {products.map(p => (
+              <Line key={p} isAnimationActive={false} type="monotone" dataKey={p.toLowerCase()} stroke={ALL_PRODUCT_COLORS[p] ?? DEFAULT_PRODUCT_COLOR} dot={false} strokeWidth={1.5} />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-xs font-semibold">Position: Normalized Portfolio</h3>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            {products.map(p => (
+              <div key={p} className="flex items-center gap-1">
+                <div className="size-2 rounded-full" style={{ backgroundColor: ALL_PRODUCT_COLORS[p] ?? DEFAULT_PRODUCT_COLOR }} />
+                <span className="text-[10px] text-zinc-500">{p}</span>
+              </div>
+            ))}
+          </div>
+          <Dialog>
+            <DialogTrigger className="flex items-center gap-1 rounded-md border border-zinc-200 px-2 py-1 text-[10px] text-zinc-500 hover:bg-zinc-50">
+              <Maximize2 className="size-3" />
+              Expand
+            </DialogTrigger>
+            <DialogContent className="!max-w-[95vw] w-full p-6">
+              <h3 className="text-xs font-semibold mb-2">Position: Normalized Portfolio</h3>
+              {renderChart("h-[80vh]")}
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
       <div className="relative overflow-hidden">
         {renderChart("h-44")}

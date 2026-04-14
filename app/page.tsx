@@ -1,7 +1,7 @@
 "use client"
 
 import "@/lib/wdyr"
-import { DashboardProvider } from "@/lib/dashboard-context"
+import { DashboardProvider, useData } from "@/lib/dashboard-context"
 import { TickScrubber } from "@/components/tick-scrubber"
 import { StatCards } from "@/components/stat-cards"
 import { Filters } from "@/components/filters"
@@ -15,9 +15,11 @@ import { MarketDynamics } from "@/components/market-dynamics"
 import { FillsPanel } from "@/components/fills-panel"
 import { LogViewer } from "@/components/log-viewer"
 
-export default function Home() {
+function Dashboard() {
+  const { selectedProduct } = useData()
+  const allMode = selectedProduct === "ALL"
+
   return (
-    <DashboardProvider>
     <div className="relative min-h-screen bg-zinc-100 text-zinc-900 font-sans">
 
       <div className="mx-auto max-w-7xl p-4 space-y-4">
@@ -40,15 +42,15 @@ export default function Home() {
 
         <div className="grid grid-cols-[1fr_360px] gap-4">
           <div className="space-y-4">
-            <PriceChart />
+            {!allMode && <PriceChart />}
             <PnlChart />
             <PositionChart />
           </div>
           <div className="space-y-4">
-            <OrderBook />
+            {!allMode && <OrderBook />}
             <RunsPanel />
-            <ProductSummary />
-            <MarketDynamics />
+            {!allMode && <ProductSummary />}
+            {!allMode && <MarketDynamics />}
           </div>
         </div>
 
@@ -56,6 +58,13 @@ export default function Home() {
         <LogViewer />
       </div>
     </div>
+  )
+}
+
+export default function Home() {
+  return (
+    <DashboardProvider>
+      <Dashboard />
     </DashboardProvider>
   )
 }

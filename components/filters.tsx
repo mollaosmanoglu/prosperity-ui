@@ -23,8 +23,8 @@ export function Filters() {
         <PillTabs
           id="product"
           options={productOptions}
-          value={selectedProduct}
-          onChange={(v) => setSelectedProduct(v === "All Products" ? products[0] : v)}
+          value={selectedProduct === "ALL" ? "All Products" : selectedProduct}
+          onChange={(v) => setSelectedProduct(v === "All Products" ? "ALL" : v)}
         />
       </div>
     </div>

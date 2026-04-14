@@ -35,9 +35,12 @@ const DEFAULT_COLOR = "#2563eb"
 const SAMPLE_TARGET = 200
 
 export function PnlChart() {
-  const { pnlDataFull, selectedProduct, comparisonPnl, comparisonRuns } = useData()
+  const { pnlDataFull, selectedProduct, products, comparisonPnl, comparisonRuns } = useData()
   if (comparisonPnl) {
     return <PnlComparisonInner data={comparisonPnl} runs={comparisonRuns} product={selectedProduct} />
+  }
+  if (selectedProduct === "ALL") {
+    return <PnlAllProductsInner data={pnlDataFull} products={products} />
   }
   return <PnlChartInner data={pnlDataFull} product={selectedProduct} />
 }
@@ -81,6 +84,70 @@ const PnlChartInner = memo(function PnlChartInner({ data, product }: { data: Pnl
               <div className="size-2 rounded-full" style={{ backgroundColor: productColor }} />
               <span className="text-[10px] text-zinc-500">{product}</span>
             </div>
+          </div>
+          <Dialog>
+            <DialogTrigger className="flex items-center gap-1 rounded-md border border-zinc-200 px-2 py-1 text-[10px] text-zinc-500 hover:bg-zinc-50">
+              <Maximize2 className="size-3" />
+              Expand
+            </DialogTrigger>
+            <DialogContent className="!max-w-[95vw] w-full p-6">
+              <h3 className="text-xs font-semibold mb-2">PnL Performance</h3>
+              {renderChart("h-[80vh]")}
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+      <div className="relative overflow-hidden">
+        {renderChart("h-52")}
+        <ChartCursor style={CURSOR_STYLE} />
+      </div>
+    </div>
+  )
+})
+
+const ALL_PRODUCT_COLORS: Record<string, string> = {
+  EMERALDS: "#059669",
+  TOMATOES: "#e11d48",
+}
+
+const PnlAllProductsInner = memo(function PnlAllProductsInner({ data, products }: { data: PnlPoint[], products: string[] }) {
+  const sampled = useMemo(() => lttb(data, SAMPLE_TARGET, d => d.total), [data])
+
+  function renderChart(height: string) {
+    return (
+      <div className={height}>
+        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+          <LineChart data={sampled} margin={MARGIN}>
+            <CartesianGrid stroke="#f0f0f0" />
+            <XAxis dataKey="tick" tick={TICK_STYLE} tickLine={false} axisLine={AXIS_LINE} />
+            <YAxis tick={TICK_STYLE} tickLine={false} axisLine={false} width={50} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <Line isAnimationActive={false} type="monotone" dataKey="total" stroke="#18181b" dot={false} strokeWidth={1.5} />
+            {products.map(p => (
+              <Line key={p} isAnimationActive={false} type="monotone" dataKey={p.toLowerCase()} stroke={ALL_PRODUCT_COLORS[p] ?? DEFAULT_COLOR} dot={false} strokeWidth={1.5} />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-xs font-semibold">PnL Performance</h3>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              <div className="size-2 rounded-full bg-zinc-900" />
+              <span className="text-[10px] text-zinc-500">TOTAL</span>
+            </div>
+            {products.map(p => (
+              <div key={p} className="flex items-center gap-1">
+                <div className="size-2 rounded-full" style={{ backgroundColor: ALL_PRODUCT_COLORS[p] ?? DEFAULT_COLOR }} />
+                <span className="text-[10px] text-zinc-500">{p}</span>
+              </div>
+            ))}
           </div>
           <Dialog>
             <DialogTrigger className="flex items-center gap-1 rounded-md border border-zinc-200 px-2 py-1 text-[10px] text-zinc-500 hover:bg-zinc-50">

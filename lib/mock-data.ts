@@ -46,36 +46,39 @@ function generatePriceSeries(ticks: number) {
 // Generate PnL curve that ends around 2315
 function generatePnlSeries(ticks: number) {
   const rand = seededRandom(123)
-  const data: { tick: number; total: number; emeralds: number }[] = []
-  let total = 0
+  const data: { tick: number; total: number; emeralds: number; tomatoes: number }[] = []
   let emeralds = 0
+  let tomatoes = 0
 
   for (let i = 0; i < ticks; i++) {
     const emeraldsDelta = (rand() - 0.42) * 8
     const tomatoesDelta = (rand() - 0.44) * 5
     emeralds += emeraldsDelta
-    total += emeraldsDelta + tomatoesDelta
+    tomatoes += tomatoesDelta
 
     data.push({
       tick: i,
-      total: Math.round(total * 100) / 100,
+      total: Math.round((emeralds + tomatoes) * 100) / 100,
       emeralds: Math.round(emeralds * 100) / 100,
+      tomatoes: Math.round(tomatoes * 100) / 100,
     })
   }
 
   // Scale to match target ending values
-  const totalScale = 2315.297 / (total || 1)
+  const totalScale = 2315.297 / ((emeralds + tomatoes) || 1)
   const emeraldsScale = 1050 / (emeralds || 1)
+  const tomatoesScale = (2315.297 - 1050) / (tomatoes || 1)
   return data.map((d) => ({
     tick: d.tick,
     total: Math.round(d.total * totalScale * 100) / 100,
     emeralds: Math.round(d.emeralds * emeraldsScale * 100) / 100,
+    tomatoes: Math.round(d.tomatoes * tomatoesScale * 100) / 100,
   }))
 }
 
 // Generate position series oscillating between -20 and 20
-function generatePositionSeries(ticks: number) {
-  const rand = seededRandom(456)
+function generatePositionSeries(ticks: number, seed: number) {
+  const rand = seededRandom(seed)
   const data: { tick: number; position: number }[] = []
   let pos = 0
 
@@ -91,7 +94,8 @@ const TOTAL_TICKS = 2000
 
 export const priceData = generatePriceSeries(TOTAL_TICKS)
 export const pnlData = generatePnlSeries(TOTAL_TICKS)
-export const positionData = generatePositionSeries(TOTAL_TICKS)
+export const positionData = generatePositionSeries(TOTAL_TICKS, 456)
+export const positionDataTomatoes = generatePositionSeries(TOTAL_TICKS, 789)
 
 export function getOrderBookAtTick(tick: number) {
   const p = priceData[Math.min(tick, priceData.length - 1)]

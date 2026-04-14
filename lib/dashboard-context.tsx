@@ -22,6 +22,7 @@ import {
   priceData as mockPriceData,
   pnlData as mockPnlData,
   positionData as mockPositionData,
+  positionDataTomatoes as mockPositionDataTomatoes,
   getOrderBookAtTick as mockGetOrderBook,
   TOTAL_TICKS_COUNT as mockTotalTicks,
 } from "@/lib/mock-data"
@@ -66,6 +67,7 @@ interface DataContextValue {
   comparisonRuns: ComparisonSeries[]
   comparisonPnl: Record<string, number>[] | null
   comparisonPosition: Record<string, number>[] | null
+  allProductsPosition: Record<string, number>[] | null
   logs: RawLogEntry[]
   loadLog: (text: string, fileName?: string) => void
 }
@@ -140,9 +142,43 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     [data],
   )
   const positionDataFull = useMemo(
-    () => (data ? getPositionData(data, selectedProduct) : mockPositionData),
+    () => (selectedProduct === "ALL" ? [] : data ? getPositionData(data, selectedProduct) : mockPositionData),
     [data, selectedProduct],
   )
+
+  const priceDataFullSafe = selectedProduct === "ALL" ? [] : priceDataFull
+
+  // All-products position: one key per product, normalized to [-1, 1]
+  const allProductsPosition = useMemo<Record<string, number>[] | null>(() => {
+    if (selectedProduct !== "ALL") return null
+    const src = data ?? null
+    const prods = src?.products ?? mockProducts
+    const mockByProduct: Record<string, typeof mockPositionData> = {
+      EMERALDS: mockPositionData,
+      TOMATOES: mockPositionDataTomatoes,
+    }
+    const posArrays = prods.map(p => {
+      if (!src) return mockByProduct[p] ?? mockPositionData
+      return getPositionData(src, p)
+    })
+    const maxTicks = Math.max(...posArrays.map(a => a.length))
+    // Find max abs position per product for normalization
+    const maxAbs = posArrays.map(a => {
+      let m = 1
+      for (const pt of a) { const abs = Math.abs(pt.position); if (abs > m) m = abs }
+      return m
+    })
+    const merged: Record<string, number>[] = []
+    for (let t = 0; t < maxTicks; t++) {
+      const point: Record<string, number> = { tick: t }
+      for (let j = 0; j < prods.length; j++) {
+        const pos = posArrays[j][t]
+        if (pos) point[prods[j].toLowerCase()] = pos.position / maxAbs[j]
+      }
+      merged.push(point)
+    }
+    return merged
+  }, [selectedProduct, data])
 
   // ── Pre-computed running stats: O(n) once, O(1) per tick ───────────
 
@@ -257,12 +293,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     return {
       totalPnl: lastPnl?.total ?? 0,
       maxDrawdown: Math.round((runningStats.drawdown[t] ?? 0) * 1000) / 1000,
-      emeraldsPnl: lastPnl?.emeralds ?? 0,
+      productPnl: (lastPnl as Record<string, number>)?.[selectedProduct.toLowerCase()] ?? 0,
       position: lastPos?.position ?? 0,
       microprice: Math.round(microprice * 100) / 100,
       midPrice: orderBook.midPrice,
     }
-  }, [currentTick, pnlDataFull, positionDataFull, orderBook, runningStats])
+  }, [currentTick, pnlDataFull, positionDataFull, orderBook, runningStats, selectedProduct])
 
   const productSummary = useMemo<ProductSummaryData>(() => {
     const lastPos = positionDataFull[Math.min(currentTick, positionDataFull.length - 1)]
@@ -277,6 +313,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   }, [currentTick, positionDataFull, priceDataFull, pnlDataFull, selectedProduct, orderBook])
 
   const marketDynamics = useMemo<MarketDynamicsData>(() => {
+    if (priceDataFull.length === 0) return { volatility: "—", tradeMomentum: "—", spreadEfficiency: "—" }
     const t = Math.min(currentTick, priceDataFull.length - 1)
     const cur = priceDataFull[t]
     // Volatility: population stddev of mid prices over 21-tick rolling window
@@ -317,13 +354,14 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const dataValue = useMemo<DataContextValue>(() => ({
     data, products, selectedProduct, setSelectedProduct,
-    totalTicks, priceDataFull, pnlDataFull, positionDataFull,
+    totalTicks, priceDataFull: priceDataFullSafe, pnlDataFull, positionDataFull,
     runs, activeRun, setActiveRun: switchRun,
     comparing, setComparing,
     hiddenRuns, toggleRunVisibility,
     comparisonRuns, comparisonPnl, comparisonPosition,
+    allProductsPosition,
     logs, loadLog,
-  }), [data, products, selectedProduct, totalTicks, priceDataFull, pnlDataFull, positionDataFull, runs, activeRun, switchRun, comparing, hiddenRuns, toggleRunVisibility, comparisonRuns, comparisonPnl, comparisonPosition, logs, loadLog])
+  }), [data, products, selectedProduct, totalTicks, priceDataFull, pnlDataFull, positionDataFull, runs, activeRun, switchRun, comparing, hiddenRuns, toggleRunVisibility, comparisonRuns, comparisonPnl, comparisonPosition, allProductsPosition, logs, loadLog])
 
   const tickValue = useMemo<TickContextValue>(() => ({
     currentTick, setCurrentTick, playing, setPlaying, scrubbing, setScrubbing,

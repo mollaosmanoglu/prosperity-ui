@@ -3,13 +3,15 @@
 import { memo } from "react"
 import { Info, TrendingUp, TrendingDown } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { useTick } from "@/lib/dashboard-context"
+import { useData, useTick } from "@/lib/dashboard-context"
 import { AnimatedNumber } from "@/components/animated-number"
 
 export const StatCards = memo(function StatCards() {
   const { stats } = useTick()
+  const { selectedProduct, products } = useData()
+  const allMode = selectedProduct === "ALL"
 
-  const cards = [
+  const cards = allMode ? [
     {
       title: "Total PnL",
       value: stats.totalPnl,
@@ -27,12 +29,53 @@ export const StatCards = memo(function StatCards() {
       tooltip: "Largest peak-to-trough decline in PnL",
     },
     {
-      title: "EMERALDS PnL",
-      value: stats.emeraldsPnl,
+      title: "Avg Product PnL",
+      value: products.length > 0 ? stats.totalPnl / products.length : 0,
+      format: (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 3 }),
+      subtitle: "Per Product",
+      trend: "up" as const,
+      tooltip: "Average PnL per product",
+    },
+    {
+      title: "Total Position",
+      value: stats.position,
+      format: (n: number) => Math.round(n).toString(),
+      subtitle: "Current Inventory",
+      trend: stats.position < 0 ? "down" as const : stats.position > 0 ? "up" as const : null,
+      tooltip: "Sum of all product positions",
+    },
+    {
+      title: "Active Products",
+      value: products.length,
+      format: (n: number) => n.toString(),
+      subtitle: "Trading",
+      trend: null,
+      tooltip: "Number of products being traded",
+    },
+  ] : [
+    {
+      title: "Total PnL",
+      value: stats.totalPnl,
+      format: (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 3 }),
+      subtitle: "Cumulative",
+      trend: "up" as const,
+      tooltip: "Total profit and loss across all products",
+    },
+    {
+      title: "Max Drawdown",
+      value: stats.maxDrawdown,
+      format: (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 3 }),
+      subtitle: "Peak-to-Trough",
+      trend: "down" as const,
+      tooltip: "Largest peak-to-trough decline in PnL",
+    },
+    {
+      title: `${selectedProduct} PnL`,
+      value: stats.productPnl,
       format: (n: number) => n.toLocaleString(),
       subtitle: "By Product",
       trend: "up" as const,
-      tooltip: "Profit and loss for EMERALDS only",
+      tooltip: `Profit and loss for ${selectedProduct} only`,
     },
     {
       title: "Position",

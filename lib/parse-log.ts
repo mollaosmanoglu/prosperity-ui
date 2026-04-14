@@ -60,6 +60,13 @@ export interface PricePoint {
   bid: number
   ask: number
   mid: number
+  bid2?: number
+  bid3?: number
+  ask2?: number
+  ask3?: number
+  domMid?: number
+  micro?: number
+  deepVamp?: number
   buyFill?: number
   sellFill?: number
 }
@@ -85,7 +92,7 @@ export interface OrderBookData {
 export interface StatsData {
   totalPnl: number
   maxDrawdown: number
-  emeraldsPnl: number
+  productPnl: number
   position: number
   microprice: number
   midPrice: number
@@ -212,12 +219,43 @@ export function getPriceData(data: DashboardData, product: string): PricePoint[]
   }
 
   return rows.map((row, i) => {
+    const b0 = row.bidLevels[0], a0 = row.askLevels[0]
     const point: PricePoint = {
       tick: i,
-      bid: row.bidLevels[0]?.price ?? row.midPrice,
-      ask: row.askLevels[0]?.price ?? row.midPrice,
+      bid: b0?.price ?? row.midPrice,
+      ask: a0?.price ?? row.midPrice,
       mid: row.midPrice,
     }
+
+    // Depth (L2, L3)
+    if (row.bidLevels[1]) point.bid2 = row.bidLevels[1].price
+    if (row.bidLevels[2]) point.bid3 = row.bidLevels[2].price
+    if (row.askLevels[1]) point.ask2 = row.askLevels[1].price
+    if (row.askLevels[2]) point.ask3 = row.askLevels[2].price
+
+    // Dom Mid: midpoint of the levels with largest size on each side
+    const domBid = row.bidLevels.reduce<{ price: number; size: number } | null>((best, l) => !best || l.size > best.size ? l : best, null)
+    const domAsk = row.askLevels.reduce<{ price: number; size: number } | null>((best, l) => !best || l.size > best.size ? l : best, null)
+    if (domBid && domAsk) point.domMid = (domBid.price + domAsk.price) / 2
+
+    // Micro: L1 size-weighted midpoint
+    if (b0 && a0) {
+      const totalQty = b0.size + a0.size
+      if (totalQty > 0) point.micro = (b0.price * a0.size + a0.price * b0.size) / totalQty
+    }
+
+    // Deep VAMP: all-level size-weighted midpoint
+    const bids = row.bidLevels, asks = row.askLevels
+    const levels = Math.min(bids.length, asks.length)
+    if (levels > 0) {
+      let num = 0, den = 0
+      for (let j = 0; j < levels; j++) {
+        num += asks[j].price * bids[j].size + bids[j].price * asks[j].size
+        den += bids[j].size + asks[j].size
+      }
+      if (den > 0) point.deepVamp = num / den
+    }
+
     const origTs = row.timestamp + (row.day === 0 ? 100000 : 0)
     const buy = buysByTs.get(origTs)
     const sell = sellsByTs.get(origTs)
@@ -322,7 +360,7 @@ export function getStats(data: DashboardData, product: string, tick?: number): S
   return {
     totalPnl: lastPnl?.total ?? 0,
     maxDrawdown: Math.round(maxDrawdown * 1000) / 1000,
-    emeraldsPnl: lastPnl?.emeralds ?? 0,
+    productPnl: lastPnl?.emeralds ?? 0,
     position,
     microprice: Math.round(microprice * 100) / 100,
     midPrice: row?.midPrice ?? 0,
