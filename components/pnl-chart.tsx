@@ -13,6 +13,7 @@ import {
 } from "recharts"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { useDashboard } from "@/lib/dashboard-context"
+import type { PnlPoint } from "@/lib/parse-log"
 
 const MARGIN = { top: 5, right: 5, bottom: 5, left: 5 }
 const TICK_STYLE = { fontSize: 10, fill: "#a1a1aa" }
@@ -30,11 +31,17 @@ const PRODUCT_COLORS: Record<string, string> = {
 }
 const DEFAULT_COLOR = "#2563eb"
 
-export const PnlChart = memo(function PnlChart() {
-  const { pnlData, selectedProduct } = useDashboard()
-  const sampled = useMemo(() => pnlData.filter((_, i) => i % 10 === 0), [pnlData])
-  const productKey = selectedProduct.toLowerCase()
-  const productColor = PRODUCT_COLORS[selectedProduct] ?? DEFAULT_COLOR
+// Thin wrapper: re-renders on tick (cheap), passes stable refs to inner
+export function PnlChart() {
+  const { pnlDataFull, selectedProduct } = useDashboard()
+  return <PnlChartInner data={pnlDataFull} product={selectedProduct} />
+}
+
+// PERF: props must be tick-independent for memo to work
+const PnlChartInner = memo(function PnlChartInner({ data, product }: { data: PnlPoint[], product: string }) {
+  const sampled = useMemo(() => data.filter((_, i) => i % 10 === 0), [data])
+  const productKey = product.toLowerCase()
+  const productColor = PRODUCT_COLORS[product] ?? DEFAULT_COLOR
 
   function renderChart(height: string) {
     return (
@@ -65,7 +72,7 @@ export const PnlChart = memo(function PnlChart() {
             </div>
             <div className="flex items-center gap-1">
               <div className="size-2 rounded-full" style={{ backgroundColor: productColor }} />
-              <span className="text-[10px] text-zinc-500">{selectedProduct}</span>
+              <span className="text-[10px] text-zinc-500">{product}</span>
             </div>
           </div>
           <Dialog>

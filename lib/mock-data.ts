@@ -1,5 +1,15 @@
+// Deterministic PRNG to avoid SSR/client hydration mismatch
+function seededRandom(seed: number) {
+  let s = seed
+  return () => {
+    s = (s * 1664525 + 1013904223) | 0
+    return (s >>> 0) / 0xffffffff
+  }
+}
+
 // Generate realistic price series for EMERALDS starting around 10000
 function generatePriceSeries(ticks: number) {
+  const rand = seededRandom(42)
   const data: {
     tick: number
     bid: number
@@ -11,10 +21,10 @@ function generatePriceSeries(ticks: number) {
 
   let mid = 10000
   for (let i = 0; i < ticks; i++) {
-    const drift = (Math.random() - 0.48) * 2
+    const drift = (rand() - 0.48) * 2
     const vol = Math.sin(i / 200) * 3
     mid = mid + drift + vol * 0.1
-    const spread = 8 + Math.random() * 8
+    const spread = 8 + rand() * 8
     const halfSpread = spread / 2
 
     const point: (typeof data)[number] = {
@@ -25,8 +35,8 @@ function generatePriceSeries(ticks: number) {
     }
 
     // Scatter some fills
-    if (Math.random() < 0.03) point.buyFill = point.ask + Math.random() * 2
-    if (Math.random() < 0.03) point.sellFill = point.bid - Math.random() * 2
+    if (rand() < 0.03) point.buyFill = point.ask + rand() * 2
+    if (rand() < 0.03) point.sellFill = point.bid - rand() * 2
 
     data.push(point)
   }
@@ -35,13 +45,14 @@ function generatePriceSeries(ticks: number) {
 
 // Generate PnL curve that ends around 2315
 function generatePnlSeries(ticks: number) {
+  const rand = seededRandom(123)
   const data: { tick: number; total: number; emeralds: number }[] = []
   let total = 0
   let emeralds = 0
 
   for (let i = 0; i < ticks; i++) {
-    const emeraldsDelta = (Math.random() - 0.42) * 8
-    const tomatoesDelta = (Math.random() - 0.44) * 5
+    const emeraldsDelta = (rand() - 0.42) * 8
+    const tomatoesDelta = (rand() - 0.44) * 5
     emeralds += emeraldsDelta
     total += emeraldsDelta + tomatoesDelta
 
@@ -64,11 +75,12 @@ function generatePnlSeries(ticks: number) {
 
 // Generate position series oscillating between -20 and 20
 function generatePositionSeries(ticks: number) {
+  const rand = seededRandom(456)
   const data: { tick: number; position: number }[] = []
   let pos = 0
 
   for (let i = 0; i < ticks; i++) {
-    const delta = Math.round((Math.random() - 0.5) * 4)
+    const delta = Math.round((rand() - 0.5) * 4)
     pos = Math.max(-20, Math.min(20, pos + delta))
     data.push({ tick: i, position: pos })
   }
@@ -92,28 +104,6 @@ export const orderBook = {
     { price: 9992, size: 15 },
     { price: 9990, size: 30 },
   ],
-}
-
-export const stats = {
-  totalPnl: 2315.297,
-  maxDrawdown: 177.578,
-  emeraldsPnl: 1050,
-  position: -9,
-  microprice: 10000.0,
-  midPrice: 10000.0,
-}
-
-export const productSummary = {
-  position: 0,
-  pnl: 0,
-  midPrice: 10000,
-  spread: 16.0,
-}
-
-export const marketDynamics = {
-  volatility: "0.00 pts",
-  tradeMomentum: "0 vol",
-  spreadEfficiency: "0.160%",
 }
 
 export const TOTAL_TICKS_COUNT = TOTAL_TICKS

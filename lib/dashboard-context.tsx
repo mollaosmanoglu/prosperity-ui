@@ -42,12 +42,9 @@ interface DashboardContextValue {
   setPlaying: React.Dispatch<React.SetStateAction<boolean>>
   totalTicks: number
 
-  // Derived data (sliced to currentTick for rendering, full for Brush range)
-  priceData: PricePoint[]
+  // Full data arrays (stable refs — only change on product/data switch)
   priceDataFull: PricePoint[]
-  pnlData: PnlPoint[]
   pnlDataFull: PnlPoint[]
-  positionData: PositionPoint[]
   positionDataFull: PositionPoint[]
   orderBook: OrderBookData
   stats: StatsData
@@ -207,11 +204,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     playing,
     setPlaying,
     totalTicks,
-    priceData,
     priceDataFull,
-    pnlData,
     pnlDataFull,
-    positionData,
     positionDataFull,
     orderBook,
     stats,
@@ -222,7 +216,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     loadLog,
   }), [
     data, products, selectedProduct, currentTick, playing, totalTicks,
-    priceData, priceDataFull, pnlData, pnlDataFull, positionData, positionDataFull, orderBook, stats,
+    priceDataFull, pnlDataFull, positionDataFull, orderBook, stats,
     productSummary, marketDynamics, fills, logs, loadLog,
   ])
 

@@ -14,6 +14,7 @@ import {
 } from "recharts"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { useDashboard } from "@/lib/dashboard-context"
+import type { PositionPoint } from "@/lib/parse-log"
 
 const MARGIN = { top: 5, right: 5, bottom: 5, left: 5 }
 const TICK_STYLE = { fontSize: 10, fill: "#a1a1aa" }
@@ -26,9 +27,15 @@ const TOOLTIP_STYLE = {
   boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
 }
 
-export const PositionChart = memo(function PositionChart() {
-  const { positionData, selectedProduct } = useDashboard()
-  const sampled = useMemo(() => positionData.filter((_, i) => i % 10 === 0), [positionData])
+// Thin wrapper: re-renders on tick (cheap), passes stable refs to inner
+export function PositionChart() {
+  const { positionDataFull, selectedProduct } = useDashboard()
+  return <PositionChartInner data={positionDataFull} product={selectedProduct} />
+}
+
+// PERF: props must be tick-independent for memo to work
+const PositionChartInner = memo(function PositionChartInner({ data, product }: { data: PositionPoint[], product: string }) {
+  const sampled = useMemo(() => data.filter((_, i) => i % 10 === 0), [data])
 
   function renderChart(height: string) {
     return (
@@ -50,14 +57,14 @@ export const PositionChart = memo(function PositionChart() {
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold">Position: {selectedProduct}</h3>
+        <h3 className="text-xs font-semibold">Position: {product}</h3>
         <Dialog>
           <DialogTrigger className="flex items-center gap-1 rounded-md border border-zinc-200 px-2 py-1 text-[10px] text-zinc-500 hover:bg-zinc-50">
             <Maximize2 className="size-3" />
             Expand
           </DialogTrigger>
           <DialogContent className="!max-w-[95vw] w-full p-6">
-            <h3 className="text-xs font-semibold mb-2">Position: {selectedProduct}</h3>
+            <h3 className="text-xs font-semibold mb-2">Position: {product}</h3>
             {renderChart("h-[80vh]")}
           </DialogContent>
         </Dialog>
