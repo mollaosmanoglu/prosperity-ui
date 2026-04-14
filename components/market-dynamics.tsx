@@ -2,6 +2,7 @@
 
 import { memo } from "react"
 import { Info } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useData, useTick } from "@/lib/dashboard-context"
 
 export const MarketDynamics = memo(function MarketDynamics() {
@@ -23,7 +24,10 @@ export const MarketDynamics = memo(function MarketDynamics() {
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
       <div className="flex items-center gap-1.5">
         <h3 className="text-xs font-semibold">Market Dynamics: {selectedProduct}</h3>
-        <Info className="size-3 text-zinc-400" />
+        <Tooltip>
+          <TooltipTrigger className="cursor-default"><Info className="size-3 text-zinc-400" /></TooltipTrigger>
+          <TooltipContent>Volatility (21-tick rolling stddev), trade volume at tick, and spread/mid ratio</TooltipContent>
+        </Tooltip>
       </div>
       <div className="flex flex-col gap-2.5">
         {rows.map((row) => (
