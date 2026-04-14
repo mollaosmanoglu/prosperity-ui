@@ -51,7 +51,7 @@ export function TickScrubber() {
     const file = e.target.files?.[0]
     if (!file) return
     const text = await file.text()
-    loadLog(text)
+    loadLog(text, file.name)
     e.target.value = ""
   }
 

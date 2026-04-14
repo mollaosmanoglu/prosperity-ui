@@ -32,6 +32,12 @@ const mockProducts = ["EMERALDS", "TOMATOES"]
 
 // ── Context types ────────────────────────────────────────────────────
 
+export interface RunInfo {
+  name: string
+  totalPnl: number
+  trades: number
+}
+
 interface DataContextValue {
   data: DashboardData | null
   products: string[]
@@ -41,8 +47,11 @@ interface DataContextValue {
   priceDataFull: PricePoint[]
   pnlDataFull: PnlPoint[]
   positionDataFull: PositionPoint[]
+  runs: RunInfo[]
+  activeRun: string
+  setActiveRun: (name: string) => void
   logs: RawLogEntry[]
-  loadLog: (text: string) => void
+  loadLog: (text: string, fileName?: string) => void
 }
 
 interface TickContextValue {
@@ -65,17 +74,32 @@ const TickContext = createContext<TickContextValue | null>(null)
 // ── Provider ─────────────────────────────────────────────────────────
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<DashboardData | null>(null)
+  const [allRuns, setAllRuns] = useState<Map<string, DashboardData>>(new Map())
+  const [activeRun, setActiveRun] = useState("Tutorial Sub")
   const [selectedProduct, setSelectedProduct] = useState("EMERALDS")
   const [currentTick, setCurrentTick] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [scrubbing, setScrubbing] = useState(false)
 
-  const loadLog = useCallback((text: string) => {
+  const data = allRuns.get(activeRun) ?? null
+
+  const switchRun = useCallback((name: string) => {
+    setActiveRun(name)
+    setPlaying(false)
+    const d = allRuns.get(name)
+    const ticks = d ? d.timestamps.length : mockTotalTicks
+    setCurrentTick(ticks - 1)
+    if (d) setSelectedProduct(d.products[0])
+    else setSelectedProduct("EMERALDS")
+  }, [allRuns])
+
+  const loadLog = useCallback((text: string, fileName?: string) => {
     try {
       const raw = JSON.parse(text)
       const parsed = parseLog(raw)
-      setData(parsed)
+      const name = fileName?.replace(/\.[^.]+$/, "") ?? parsed.submissionId ?? "Upload"
+      setAllRuns(prev => new Map(prev).set(name, parsed))
+      setActiveRun(name)
       setSelectedProduct(parsed.products[0])
       setCurrentTick(0)
       setPlaying(false)
@@ -120,6 +144,23 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   }, [pnlDataFull])
 
   const logs = useMemo(() => (data?.logs ?? mockLogs), [data])
+
+  const runs = useMemo<RunInfo[]>(() => {
+    const mockLast = mockPnlData[mockPnlData.length - 1]
+    const list: RunInfo[] = [
+      { name: "Tutorial Sub", totalPnl: Math.round((mockLast?.total ?? 0) * 1000) / 1000, trades: 0 },
+    ]
+    for (const [name, d] of allRuns) {
+      const pnl = getPnlData(d)
+      const lastPnl = pnl[pnl.length - 1]
+      list.push({
+        name,
+        totalPnl: Math.round((lastPnl?.total ?? 0) * 1000) / 1000,
+        trades: d.fills.length,
+      })
+    }
+    return list
+  }, [allRuns])
 
   // ── Tick-dependent (O(1) lookups) ──────────────────────────────────
 
@@ -201,8 +242,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const dataValue = useMemo<DataContextValue>(() => ({
     data, products, selectedProduct, setSelectedProduct,
     totalTicks, priceDataFull, pnlDataFull, positionDataFull,
+    runs, activeRun, setActiveRun: switchRun,
     logs, loadLog,
-  }), [data, products, selectedProduct, totalTicks, priceDataFull, pnlDataFull, positionDataFull, logs, loadLog])
+  }), [data, products, selectedProduct, totalTicks, priceDataFull, pnlDataFull, positionDataFull, runs, activeRun, switchRun, logs, loadLog])
 
   const tickValue = useMemo<TickContextValue>(() => ({
     currentTick, setCurrentTick, playing, setPlaying, scrubbing, setScrubbing,

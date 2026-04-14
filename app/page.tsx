@@ -8,6 +8,7 @@ import { Filters } from "@/components/filters"
 import { PriceChart } from "@/components/price-chart"
 import { PnlChart } from "@/components/pnl-chart"
 import { PositionChart } from "@/components/position-chart"
+import { RunsPanel } from "@/components/runs-panel"
 import { OrderBook } from "@/components/order-book"
 import { ProductSummary } from "@/components/product-summary"
 import { MarketDynamics } from "@/components/market-dynamics"
@@ -44,6 +45,7 @@ export default function Home() {
             <PositionChart />
           </div>
           <div className="space-y-4">
+            <RunsPanel />
             <OrderBook />
             <ProductSummary />
             <MarketDynamics />

@@ -44,6 +44,7 @@ export interface Fill {
 }
 
 export interface DashboardData {
+  submissionId: string
   products: string[]
   timestamps: number[] // sorted unique tick indices
   activitiesByProduct: Map<string, ActivityRow[]>
@@ -132,6 +133,7 @@ export function parseLog(raw: RawLog): DashboardData {
   }
 
   return {
+    submissionId: raw.submissionId,
     products,
     timestamps,
     activitiesByProduct,
