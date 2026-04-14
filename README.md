@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/logo.png" alt="prosperity-ui logo" width="200"/>
+</p>
+
 # prosperity-ui
 
 ![License](https://img.shields.io/badge/license-MIT-blue)
@@ -8,6 +12,12 @@ Real-time analytics dashboard for IMC Prosperity algorithmic trading competition
 
 <p align="center">
   <img src="docs/demo.gif" alt="Dashboard demo" width="800"/>
+</p>
+
+## Visual Overview
+
+<p align="center">
+  <img src="docs/architecture.png" alt="Architecture overview" width="700"/>
 </p>
 
 ## Features
