@@ -33,12 +33,12 @@ const DEFAULT_COLOR = "#2563eb"
 
 // Thin wrapper: re-renders on tick (cheap), passes stable refs to inner
 export function PnlChart() {
-  const { pnlDataFull, selectedProduct } = useDashboard()
-  return <PnlChartInner data={pnlDataFull} product={selectedProduct} />
+  const { pnlDataFull, selectedProduct, currentTick, totalTicks, playing } = useDashboard()
+  const pct = (currentTick / Math.max(totalTicks - 1, 1)) * 100
+  return <PnlChartInner data={pnlDataFull} product={selectedProduct} cursorPct={playing ? pct : null} />
 }
 
-// PERF: props must be tick-independent for memo to work
-const PnlChartInner = memo(function PnlChartInner({ data, product }: { data: PnlPoint[], product: string }) {
+const PnlChartInner = memo(function PnlChartInner({ data, product, cursorPct }: { data: PnlPoint[], product: string, cursorPct: number | null }) {
   const sampled = useMemo(() => data.filter((_, i) => i % 10 === 0), [data])
   const productKey = product.toLowerCase()
   const productColor = PRODUCT_COLORS[product] ?? DEFAULT_COLOR
@@ -87,7 +87,10 @@ const PnlChartInner = memo(function PnlChartInner({ data, product }: { data: Pnl
           </Dialog>
         </div>
       </div>
-      {renderChart("h-52")}
+      <div className="relative overflow-hidden">
+        {renderChart("h-52")}
+        {cursorPct != null && <div className="absolute top-1 bottom-1 pointer-events-none" style={{ left: `${cursorPct}%`, width: 2, background: '#18181b', opacity: 0.2 }} />}
+      </div>
     </div>
   )
 })

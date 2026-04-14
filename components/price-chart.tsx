@@ -110,14 +110,15 @@ function PriceTooltip({ active, payload, label }: any) {
   )
 }
 
-// Thin wrapper: re-renders on tick (cheap), passes stable refs to inner
 export function PriceChart() {
-  const { priceDataFull, selectedProduct } = useDashboard()
-  return <PriceChartInner data={priceDataFull} product={selectedProduct} />
+  const { priceDataFull, selectedProduct, currentTick, totalTicks, playing } = useDashboard()
+  const pct = (currentTick / Math.max(totalTicks - 1, 1)) * 100
+  return (
+    <PriceChartInner data={priceDataFull} product={selectedProduct} cursorPct={playing ? pct : null} />
+  )
 }
 
-// PERF: props must be tick-independent for memo to work
-const PriceChartInner = memo(function PriceChartInner({ data: fullData, product }: { data: PricePoint[], product: string }) {
+const PriceChartInner = memo(function PriceChartInner({ data: fullData, product, cursorPct }: { data: PricePoint[], product: string, cursorPct: number | null }) {
   const [view, setView] = useState<ChartView>("prices")
   const [resolution, setResolution] = useState<"sampled" | "full">("sampled")
   const [visible, setVisible] = useState<Set<string>>(new Set(SERIES_KEYS))
@@ -269,7 +270,10 @@ const PriceChartInner = memo(function PriceChartInner({ data: fullData, product 
           )}
       </div>
 
-      {renderChart("h-64")}
+      <div className="relative overflow-hidden">
+        {renderChart("h-64")}
+        {cursorPct != null && <div className="absolute top-1 bottom-5 pointer-events-none" style={{ left: `${cursorPct}%`, width: 2, background: '#18181b', opacity: 0.2 }} />}
+      </div>
     </div>
   )
 })

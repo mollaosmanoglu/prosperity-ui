@@ -29,12 +29,12 @@ const TOOLTIP_STYLE = {
 
 // Thin wrapper: re-renders on tick (cheap), passes stable refs to inner
 export function PositionChart() {
-  const { positionDataFull, selectedProduct } = useDashboard()
-  return <PositionChartInner data={positionDataFull} product={selectedProduct} />
+  const { positionDataFull, selectedProduct, currentTick, totalTicks, playing } = useDashboard()
+  const pct = (currentTick / Math.max(totalTicks - 1, 1)) * 100
+  return <PositionChartInner data={positionDataFull} product={selectedProduct} cursorPct={playing ? pct : null} />
 }
 
-// PERF: props must be tick-independent for memo to work
-const PositionChartInner = memo(function PositionChartInner({ data, product }: { data: PositionPoint[], product: string }) {
+const PositionChartInner = memo(function PositionChartInner({ data, product, cursorPct }: { data: PositionPoint[], product: string, cursorPct: number | null }) {
   const sampled = useMemo(() => data.filter((_, i) => i % 10 === 0), [data])
 
   function renderChart(height: string) {
@@ -69,7 +69,10 @@ const PositionChartInner = memo(function PositionChartInner({ data, product }: {
           </DialogContent>
         </Dialog>
       </div>
-      {renderChart("h-44")}
+      <div className="relative overflow-hidden">
+        {renderChart("h-44")}
+        {cursorPct != null && <div className="absolute top-1 bottom-1 pointer-events-none" style={{ left: `${cursorPct}%`, width: 2, background: '#18181b', opacity: 0.2 }} />}
+      </div>
     </div>
   )
 })

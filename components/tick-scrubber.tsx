@@ -31,9 +31,9 @@ export function TickScrubber() {
           stop()
           return maxTick
         }
-        return t + 5
+        return t + 25
       })
-    }, 80) // 12.5fps — bounded render budget
+    }, 80)
     return () => clearInterval(id)
   }, [playing, stop, maxTick, setCurrentTick])
 
