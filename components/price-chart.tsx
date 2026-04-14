@@ -3,6 +3,8 @@
 import { useState, useMemo, useCallback, memo } from "react"
 import { SlidersHorizontal, Maximize2 } from "lucide-react"
 import { PillTabs } from "@/components/pill-tabs"
+import { ChartZoomWrapper } from "@/components/chart-zoom-wrapper"
+import { useChartZoom } from "@/lib/use-chart-zoom"
 import {
   Bar,
   Line,
@@ -146,11 +148,12 @@ const PriceChartInner = memo(function PriceChartInner({ data: fullData, product 
   const [resolution, setResolution] = useState<"sampled" | "full">("sampled")
   const [visible, setVisible] = useState<Set<string>>(new Set(SERIES_KEYS))
   const [advanced, setAdvanced] = useState<Set<string>>(new Set())
+  const { zoomedData, zoomDomain, resetZoom, chartHandlers } = useChartZoom(fullData)
 
-  const sampledData = useMemo(() => lttb(fullData, SAMPLE_TARGET, d => d.mid), [fullData])
-  const data = resolution === "sampled" ? sampledData : fullData
+  const sampledData = useMemo(() => lttb(zoomedData, SAMPLE_TARGET, d => d.mid), [zoomedData])
+  const data = resolution === "sampled" ? sampledData : zoomedData
 
-  const barData = useMemo(() => lttb(fullData, 200, d => d.mid), [fullData])
+  const barData = useMemo(() => lttb(zoomedData, 200, d => d.mid), [zoomedData])
   const spreadData = useMemo(
     () => barData.map((d) => ({ tick: d.tick, spread: Math.round((d.ask - d.bid) * 10) / 10 })),
     [barData]
@@ -185,7 +188,7 @@ const PriceChartInner = memo(function PriceChartInner({ data: fullData, product 
       <div className={height}>
         <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           {view === "prices" ? (
-            <ComposedChart data={data} margin={CHART_MARGIN}>
+            <ComposedChart data={data} margin={CHART_MARGIN} {...chartHandlers}>
               <CartesianGrid stroke="#f0f0f0" />
               <XAxis dataKey="tick" tick={CHART_TICK} tickLine={false} axisLine={AXIS_LINE} />
               <YAxis domain={Y_DOMAIN_AUTO} tick={CHART_TICK} tickLine={false} axisLine={false} width={50} />
@@ -202,28 +205,31 @@ const PriceChartInner = memo(function PriceChartInner({ data: fullData, product 
               {advanced.has("Depth") && <Line isAnimationActive={false} type="monotone" dataKey="bid3" stroke={seriesColors.bid3} dot={false} strokeWidth={0.8} />}
               {show("buyFill") && <Line isAnimationActive={false} type="monotone" dataKey="buyFill" stroke="none" dot={fillDot(seriesColors.buyFill)} connectNulls={false} />}
               {show("sellFill") && <Line isAnimationActive={false} type="monotone" dataKey="sellFill" stroke="none" dot={fillDot(seriesColors.sellFill)} connectNulls={false} />}
+
             </ComposedChart>
           ) : view === "spread" ? (
-            <BarChart data={spreadData} margin={CHART_MARGIN}>
+            <BarChart data={spreadData} margin={CHART_MARGIN} {...chartHandlers}>
               <CartesianGrid stroke="#f0f0f0" />
               <XAxis dataKey="tick" tick={CHART_TICK} tickLine={false} axisLine={AXIS_LINE} />
               <YAxis tick={CHART_TICK} tickLine={false} axisLine={false} width={50} />
               <Tooltip contentStyle={TOOLTIP_STYLE} />
               <Bar isAnimationActive={false} dataKey="spread" fill={seriesColors.spread} />
+
             </BarChart>
           ) : (
-            <BarChart data={volumeData} margin={CHART_MARGIN}>
+            <BarChart data={volumeData} margin={CHART_MARGIN} {...chartHandlers}>
               <CartesianGrid stroke="#f0f0f0" />
               <XAxis dataKey="tick" tick={CHART_TICK} tickLine={false} axisLine={AXIS_LINE} />
               <YAxis tick={CHART_TICK} tickLine={false} axisLine={false} width={50} />
               <Tooltip contentStyle={TOOLTIP_STYLE} />
               <Bar isAnimationActive={false} dataKey="volume" fill={seriesColors.volume} />
+
             </BarChart>
           )}
         </ResponsiveContainer>
       </div>
     )
-  }, [view, data, spreadData, volumeData, visible, advanced])
+  }, [view, data, spreadData, volumeData, visible, advanced, chartHandlers])
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
@@ -241,8 +247,11 @@ const PriceChartInner = memo(function PriceChartInner({ data: fullData, product 
               Expand
             </DialogTrigger>
             <DialogContent className="!max-w-[95vw] w-full p-6">
-              <h3 className="text-xs font-semibold mb-2">Price &amp; Liquidity: {product}</h3>
-              {renderChart("h-[80vh]")}
+              <div className="flex items-center gap-1.5 mb-2">
+                <h3 className="text-xs font-semibold">Price &amp; Liquidity: {product}</h3>
+                {zoomDomain && <button onClick={resetZoom} className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600 hover:bg-blue-100 transition-colors">Reset</button>}
+              </div>
+              <ChartZoomWrapper>{renderChart("h-[80vh]")}</ChartZoomWrapper>
             </DialogContent>
           </Dialog>
         </div>
@@ -250,7 +259,14 @@ const PriceChartInner = memo(function PriceChartInner({ data: fullData, product 
 
       {/* View tabs + series toggles */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <PillTabs id="chart-view" options={["prices", "spread", "volume"] as const} value={view} onChange={setView} />
+        <div className="flex items-center gap-1.5">
+          <PillTabs id="chart-view" options={["prices", "spread", "volume"] as const} value={view} onChange={setView} />
+          {zoomDomain && (
+            <button onClick={resetZoom} className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600 hover:bg-blue-100 transition-colors">
+              Reset
+            </button>
+          )}
+        </div>
 
         {view === "prices" && (
             <div className="flex flex-wrap items-center gap-0.5">
@@ -298,10 +314,10 @@ const PriceChartInner = memo(function PriceChartInner({ data: fullData, product 
           )}
       </div>
 
-      <div className="relative overflow-hidden">
+      <ChartZoomWrapper>
         {renderChart("h-64")}
         <ChartCursor style={CURSOR_STYLE} />
-      </div>
+      </ChartZoomWrapper>
     </div>
   )
 })

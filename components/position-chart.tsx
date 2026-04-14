@@ -15,6 +15,8 @@ import {
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { useData, type ComparisonSeries } from "@/lib/dashboard-context"
 import { ChartCursor } from "@/components/chart-cursor"
+import { ChartZoomWrapper } from "@/components/chart-zoom-wrapper"
+import { useChartZoom } from "@/lib/use-chart-zoom"
 import { lttb } from "@/lib/lttb"
 import type { PositionPoint } from "@/lib/parse-log"
 
@@ -50,14 +52,15 @@ export function PositionChart() {
 // margin.left(5) + yAxis(30) = 35px, margin.right(5) = 5px
 const CURSOR_STYLE = (p: number) => ({ left: `calc(35px + (100% - 40px) * ${p})`, width: 2, background: '#18181b', opacity: 0.2 })
 
-const PositionChartInner = memo(function PositionChartInner({ data, product }: { data: PositionPoint[], product: string }) {
-  const sampled = useMemo(() => lttb(data, SAMPLE_TARGET, d => d.position), [data])
+const PositionChartInner = memo(function PositionChartInner({ data: fullData, product }: { data: PositionPoint[], product: string }) {
+  const { zoomedData, zoomDomain, resetZoom, chartHandlers } = useChartZoom(fullData)
+  const sampled = useMemo(() => lttb(zoomedData, SAMPLE_TARGET, d => d.position), [zoomedData])
 
   function renderChart(height: string) {
     return (
       <div className={height}>
         <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-          <LineChart data={sampled} margin={MARGIN}>
+          <LineChart data={sampled} margin={MARGIN} {...chartHandlers}>
             <CartesianGrid stroke="#f0f0f0" />
             <XAxis dataKey="tick" tick={TICK_STYLE} tickLine={false} axisLine={AXIS_LINE} />
             <YAxis domain={Y_DOMAIN} tick={TICK_STYLE} tickLine={false} axisLine={false} width={30} />
@@ -73,36 +76,47 @@ const PositionChartInner = memo(function PositionChartInner({ data, product }: {
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-xs font-semibold">Position: {product}</h3>
+        <div className="flex items-center gap-1.5">
+          <h3 className="text-xs font-semibold">Position: {product}</h3>
+          {zoomDomain && (
+            <button onClick={resetZoom} className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600 hover:bg-blue-100 transition-colors">
+              Reset
+            </button>
+          )}
+        </div>
         <Dialog>
           <DialogTrigger className="flex items-center gap-1 rounded-md border border-zinc-200 px-2 py-1 text-[10px] text-zinc-500 hover:bg-zinc-50">
             <Maximize2 className="size-3" />
             Expand
           </DialogTrigger>
           <DialogContent className="!max-w-[95vw] w-full p-6">
-            <h3 className="text-xs font-semibold mb-2">Position: {product}</h3>
-            {renderChart("h-[80vh]")}
+            <div className="flex items-center gap-1.5 mb-2">
+              <h3 className="text-xs font-semibold">Position: {product}</h3>
+              {zoomDomain && <button onClick={resetZoom} className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600 hover:bg-blue-100 transition-colors">Reset</button>}
+            </div>
+            <ChartZoomWrapper>{renderChart("h-[80vh]")}</ChartZoomWrapper>
           </DialogContent>
         </Dialog>
       </div>
-      <div className="relative overflow-hidden">
+      <ChartZoomWrapper>
         {renderChart("h-44")}
         <ChartCursor style={CURSOR_STYLE} />
-      </div>
+      </ChartZoomWrapper>
     </div>
   )
 })
 
 const NORM_Y_DOMAIN: [number, number] = [-1.1, 1.1]
 
-const PositionAllProductsInner = memo(function PositionAllProductsInner({ data, products }: { data: Record<string, number>[], products: string[] }) {
-  const sampled = useMemo(() => lttb(data, SAMPLE_TARGET, d => d[products[0]?.toLowerCase()] ?? 0), [data, products])
+const PositionAllProductsInner = memo(function PositionAllProductsInner({ data: fullData, products }: { data: Record<string, number>[], products: string[] }) {
+  const { zoomedData, zoomDomain, resetZoom, chartHandlers } = useChartZoom(fullData as (Record<string, number> & { tick: number })[])
+  const sampled = useMemo(() => lttb(zoomedData, SAMPLE_TARGET, d => d[products[0]?.toLowerCase()] ?? 0), [zoomedData, products])
 
   function renderChart(height: string) {
     return (
       <div className={height}>
         <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-          <LineChart data={sampled} margin={MARGIN}>
+          <LineChart data={sampled} margin={MARGIN} {...chartHandlers}>
             <CartesianGrid stroke="#f0f0f0" />
             <XAxis dataKey="tick" tick={TICK_STYLE} tickLine={false} axisLine={AXIS_LINE} />
             <YAxis domain={NORM_Y_DOMAIN} tick={TICK_STYLE} tickLine={false} axisLine={false} width={30} />
@@ -120,7 +134,14 @@ const PositionAllProductsInner = memo(function PositionAllProductsInner({ data, 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-xs font-semibold">Position: Normalized Portfolio</h3>
+        <div className="flex items-center gap-1.5">
+          <h3 className="text-xs font-semibold">Position: Normalized Portfolio</h3>
+          {zoomDomain && (
+            <button onClick={resetZoom} className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600 hover:bg-blue-100 transition-colors">
+              Reset
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-3">
             {products.map(p => (
@@ -136,28 +157,32 @@ const PositionAllProductsInner = memo(function PositionAllProductsInner({ data, 
               Expand
             </DialogTrigger>
             <DialogContent className="!max-w-[95vw] w-full p-6">
-              <h3 className="text-xs font-semibold mb-2">Position: Normalized Portfolio</h3>
-              {renderChart("h-[80vh]")}
+              <div className="flex items-center gap-1.5 mb-2">
+                <h3 className="text-xs font-semibold">Position: Normalized Portfolio</h3>
+                {zoomDomain && <button onClick={resetZoom} className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600 hover:bg-blue-100 transition-colors">Reset</button>}
+              </div>
+              <ChartZoomWrapper>{renderChart("h-[80vh]")}</ChartZoomWrapper>
             </DialogContent>
           </Dialog>
         </div>
       </div>
-      <div className="relative overflow-hidden">
+      <ChartZoomWrapper>
         {renderChart("h-44")}
         <ChartCursor style={CURSOR_STYLE} />
-      </div>
+      </ChartZoomWrapper>
     </div>
   )
 })
 
-const PositionComparisonInner = memo(function PositionComparisonInner({ data, runs, product }: { data: Record<string, number>[], runs: ComparisonSeries[], product: string }) {
-  const sampled = useMemo(() => lttb(data, SAMPLE_TARGET, d => d[runs[0]?.name] ?? 0), [data, runs])
+const PositionComparisonInner = memo(function PositionComparisonInner({ data: fullData, runs, product }: { data: Record<string, number>[], runs: ComparisonSeries[], product: string }) {
+  const { zoomedData, zoomDomain, resetZoom, chartHandlers } = useChartZoom(fullData as (Record<string, number> & { tick: number })[])
+  const sampled = useMemo(() => lttb(zoomedData, SAMPLE_TARGET, d => d[runs[0]?.name] ?? 0), [zoomedData, runs])
 
   function renderChart(height: string) {
     return (
       <div className={height}>
         <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-          <LineChart data={sampled} margin={MARGIN}>
+          <LineChart data={sampled} margin={MARGIN} {...chartHandlers}>
             <CartesianGrid stroke="#f0f0f0" />
             <XAxis dataKey="tick" tick={TICK_STYLE} tickLine={false} axisLine={AXIS_LINE} />
             <YAxis domain={Y_DOMAIN} tick={TICK_STYLE} tickLine={false} axisLine={false} width={30} />
@@ -175,7 +200,14 @@ const PositionComparisonInner = memo(function PositionComparisonInner({ data, ru
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-xs font-semibold">Position Comparison: {product}</h3>
+        <div className="flex items-center gap-1.5">
+          <h3 className="text-xs font-semibold">Position Comparison: {product}</h3>
+          {zoomDomain && (
+            <button onClick={resetZoom} className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600 hover:bg-blue-100 transition-colors">
+              Reset
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-3">
             {runs.map(r => (
@@ -191,16 +223,19 @@ const PositionComparisonInner = memo(function PositionComparisonInner({ data, ru
               Expand
             </DialogTrigger>
             <DialogContent className="!max-w-[95vw] w-full p-6">
-              <h3 className="text-xs font-semibold mb-2">Position Comparison: {product}</h3>
-              {renderChart("h-[80vh]")}
+              <div className="flex items-center gap-1.5 mb-2">
+                <h3 className="text-xs font-semibold">Position Comparison: {product}</h3>
+                {zoomDomain && <button onClick={resetZoom} className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600 hover:bg-blue-100 transition-colors">Reset</button>}
+              </div>
+              <ChartZoomWrapper>{renderChart("h-[80vh]")}</ChartZoomWrapper>
             </DialogContent>
           </Dialog>
         </div>
       </div>
-      <div className="relative overflow-hidden">
+      <ChartZoomWrapper>
         {renderChart("h-44")}
         <ChartCursor style={CURSOR_STYLE} />
-      </div>
+      </ChartZoomWrapper>
     </div>
   )
 })
