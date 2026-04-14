@@ -89,25 +89,27 @@ function TooltipRow({ color, label, value }: { color: string; label: string; val
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function PriceTooltip({ active, payload, label }: any) {
+function PriceTooltip({ active, payload, label, visible, advanced }: any) {
   if (!active || !payload?.length) return null
   const data = payload[0]?.payload
   if (!data) return null
+  const show = (key: string) => visible?.has(key)
+  const adv = (key: string) => advanced?.has(key)
 
   return (
     <div className="rounded-lg border border-zinc-200 bg-white px-3 py-2 shadow-md">
       <p className="text-[10px] font-mono text-zinc-400 mb-1.5">{label}</p>
-      {data.ask3 != null && <TooltipRow color={seriesColors.ask3} label="Ask L3" value={data.ask3} />}
-      {data.ask2 != null && <TooltipRow color={seriesColors.ask2} label="Ask L2" value={data.ask2} />}
-      {data.ask != null && <TooltipRow color={seriesColors.ask} label="Ask" value={data.ask} />}
-      {data.domMid != null && <TooltipRow color={seriesColors.domMid} label="Dom Mid" value={data.domMid} />}
-      {data.mid != null && <TooltipRow color={seriesColors.mid} label="Mid" value={data.mid} />}
-      {data.micro != null && <TooltipRow color={seriesColors.micro} label="Micro" value={data.micro} />}
-      {data.deepVamp != null && <TooltipRow color={seriesColors.deepVamp} label="Deep VAMP" value={data.deepVamp} />}
-      {data.bid != null && <TooltipRow color={seriesColors.bid} label="Bid" value={data.bid} />}
-      {data.bid2 != null && <TooltipRow color={seriesColors.bid2} label="Bid L2" value={data.bid2} />}
-      {data.bid3 != null && <TooltipRow color={seriesColors.bid3} label="Bid L3" value={data.bid3} />}
-      {data.buyFill != null && (
+      {adv("Depth") && data.ask3 != null && <TooltipRow color={seriesColors.ask3} label="Ask L3" value={data.ask3} />}
+      {adv("Depth") && data.ask2 != null && <TooltipRow color={seriesColors.ask2} label="Ask L2" value={data.ask2} />}
+      {show("ask") && data.ask != null && <TooltipRow color={seriesColors.ask} label="Ask" value={data.ask} />}
+      {adv("Dom Mid") && data.domMid != null && <TooltipRow color={seriesColors.domMid} label="Dom Mid" value={data.domMid} />}
+      {show("mid") && data.mid != null && <TooltipRow color={seriesColors.mid} label="Mid" value={data.mid} />}
+      {adv("Micro") && data.micro != null && <TooltipRow color={seriesColors.micro} label="Micro" value={data.micro} />}
+      {adv("Deep VAMP") && data.deepVamp != null && <TooltipRow color={seriesColors.deepVamp} label="Deep VAMP" value={data.deepVamp} />}
+      {show("bid") && data.bid != null && <TooltipRow color={seriesColors.bid} label="Bid" value={data.bid} />}
+      {adv("Depth") && data.bid2 != null && <TooltipRow color={seriesColors.bid2} label="Bid L2" value={data.bid2} />}
+      {adv("Depth") && data.bid3 != null && <TooltipRow color={seriesColors.bid3} label="Bid L3" value={data.bid3} />}
+      {show("buyFill") && data.buyFill != null && (
         <>
           <div className="my-1 border-t border-zinc-100" />
           <div className="flex items-center gap-1.5">
@@ -117,7 +119,7 @@ function PriceTooltip({ active, payload, label }: any) {
           </div>
         </>
       )}
-      {data.sellFill != null && (
+      {show("sellFill") && data.sellFill != null && (
         <>
           {data.buyFill == null && <div className="my-1 border-t border-zinc-100" />}
           <div className="flex items-center gap-1.5">
@@ -187,7 +189,7 @@ const PriceChartInner = memo(function PriceChartInner({ data: fullData, product 
               <CartesianGrid stroke="#f0f0f0" />
               <XAxis dataKey="tick" tick={CHART_TICK} tickLine={false} axisLine={AXIS_LINE} />
               <YAxis domain={Y_DOMAIN_AUTO} tick={CHART_TICK} tickLine={false} axisLine={false} width={50} />
-              <Tooltip content={<PriceTooltip />} />
+              <Tooltip content={<PriceTooltip visible={visible} advanced={advanced} />} />
               {show("ask") && <Line isAnimationActive={false} type="monotone" dataKey="ask" stroke={seriesColors.ask} dot={false} strokeWidth={1} />}
               {advanced.has("Depth") && <Line isAnimationActive={false} type="monotone" dataKey="ask2" stroke={seriesColors.ask2} dot={false} strokeWidth={0.8} />}
               {advanced.has("Depth") && <Line isAnimationActive={false} type="monotone" dataKey="ask3" stroke={seriesColors.ask3} dot={false} strokeWidth={0.8} />}
