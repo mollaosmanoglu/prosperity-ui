@@ -45,8 +45,8 @@ export default function Home() {
             <PositionChart />
           </div>
           <div className="space-y-4">
-            <RunsPanel />
             <OrderBook />
+            <RunsPanel />
             <ProductSummary />
             <MarketDynamics />
           </div>
