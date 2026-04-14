@@ -59,7 +59,7 @@ export const OrderBook = memo(function OrderBook() {
               <>
                 <div
                   className="absolute right-0 h-full bg-red-500/10 rounded-l transition-[width] duration-150"
-                  style={{ width: `${Math.min((level.size / maxSize) * 66, 66)}%` }}
+                  style={{ width: `${(level.size / maxSize) * 20}%` }}
                 />
                 <span className="relative text-right" />
                 <AnimatedNumber value={level.price} format={(n) => Math.round(n).toLocaleString()} className="relative text-center text-red-500" />
@@ -87,7 +87,7 @@ export const OrderBook = memo(function OrderBook() {
               <>
                 <div
                   className="absolute left-0 h-full bg-emerald-500/10 rounded-r transition-[width] duration-150"
-                  style={{ width: `${Math.min((level.size / maxSize) * 66, 66)}%` }}
+                  style={{ width: `${(level.size / maxSize) * 20}%` }}
                 />
                 <AnimatedNumber value={level.size} format={(n) => Math.round(n).toString()} className="relative text-right font-semibold text-emerald-500" />
                 <AnimatedNumber value={level.price} format={(n) => Math.round(n).toLocaleString()} className="relative text-center text-emerald-500" />
