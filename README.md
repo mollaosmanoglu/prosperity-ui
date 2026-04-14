@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# prosperity-ui
 
-## Getting Started
+![License](https://img.shields.io/badge/license-MIT-blue)
+![Next.js](https://img.shields.io/badge/Next.js-16-black)
+![React](https://img.shields.io/badge/React-19-61dafb)
 
-First, run the development server:
+Real-time analytics dashboard for IMC Prosperity algorithmic trading competition. Visualize PnL curves, order book depth, position Greeks, and multi-run alpha across trading rounds.
+
+<p align="center">
+  <img src="docs/demo.gif" alt="Dashboard demo" width="800"/>
+</p>
+
+## Features
+
+- **Tick-by-tick playback** — Scrub through any trading round, frame by frame
+- **Order book depth** — Live ladder with bid/ask spreads and volume
+- **PnL tracking** — Multi-run comparison with cumulative profit curves
+- **Position analysis** — Holdings over time, per product or aggregated
+- **Trade fills** — Tabular view of every execution with prices and timestamps
+- **Market dynamics** — Volatility, spread, and momentum indicators
+- **Log viewer** — Raw algorithm output for debugging
+
+## Install
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+bun install
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Usage
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Export your Prosperity logs (JSON format)
+2. Drag-and-drop into the dashboard
+3. Select product filter (or "ALL" for portfolio view)
+4. Scrub timeline, inspect charts, analyze fills
 
-## Learn More
+## Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+| Layer    | Tools                                          |
+| -------- | ---------------------------------------------- |
+| Frontend | Next.js 16, React 19, Tailwind CSS 4           |
+| UI       | shadcn/ui, Motion animations                   |
+| Charts   | Recharts with custom zoom and cursor sync      |
+| State    | React Context with tick-scrubber coordination  |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
