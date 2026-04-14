@@ -9,7 +9,7 @@ import { useData, useTick } from "@/lib/dashboard-context"
 
 export function TickScrubber() {
   const { totalTicks, loadLog } = useData()
-  const { currentTick, setCurrentTick, playing, setPlaying } = useTick()
+  const { currentTick, setCurrentTick, playing, setPlaying, setScrubbing } = useTick()
   const rafRef = useRef<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -123,6 +123,9 @@ export function TickScrubber() {
       <Slider
         value={[currentTick]}
         onValueChange={(v) => { const val = Array.isArray(v) ? v[0] : v; setCurrentTick(val); if (playing) stop() }}
+        onPointerDown={() => setScrubbing(true)}
+        onPointerUp={() => setScrubbing(false)}
+        onPointerLeave={() => setScrubbing(false)}
         min={0}
         max={maxTick}
         className="flex-1"

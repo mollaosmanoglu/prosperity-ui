@@ -50,6 +50,8 @@ interface TickContextValue {
   setCurrentTick: React.Dispatch<React.SetStateAction<number>>
   playing: boolean
   setPlaying: React.Dispatch<React.SetStateAction<boolean>>
+  scrubbing: boolean
+  setScrubbing: React.Dispatch<React.SetStateAction<boolean>>
   orderBook: OrderBookData
   stats: StatsData
   productSummary: ProductSummaryData
@@ -67,6 +69,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [selectedProduct, setSelectedProduct] = useState("EMERALDS")
   const [currentTick, setCurrentTick] = useState(0)
   const [playing, setPlaying] = useState(false)
+  const [scrubbing, setScrubbing] = useState(false)
 
   const loadLog = useCallback((text: string) => {
     try {
@@ -210,9 +213,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   }), [data, products, selectedProduct, totalTicks, priceDataFull, pnlDataFull, positionDataFull, logs, loadLog])
 
   const tickValue = useMemo<TickContextValue>(() => ({
-    currentTick, setCurrentTick, playing, setPlaying,
+    currentTick, setCurrentTick, playing, setPlaying, scrubbing, setScrubbing,
     orderBook, stats, productSummary, marketDynamics, fills,
-  }), [currentTick, playing, orderBook, stats, productSummary, marketDynamics, fills])
+  }), [currentTick, playing, scrubbing, orderBook, stats, productSummary, marketDynamics, fills])
 
   return (
     <DataContext value={dataValue}>

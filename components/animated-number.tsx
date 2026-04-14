@@ -20,16 +20,13 @@ export function AnimatedNumber({ value, format = (n) => n.toLocaleString(), clas
 }
 
 function AnimatedNumberInner({ value, format = (n) => n.toLocaleString(), className }: AnimatedNumberProps) {
-  const mv = useMotionValue(0)
+  const mv = useMotionValue(value)
   const display = useTransform(mv, (v) => format(v))
-  const initialized = useRef(false)
+  const prevValue = useRef(value)
 
   useEffect(() => {
-    if (!initialized.current) {
-      mv.set(value)
-      initialized.current = true
-      return
-    }
+    if (prevValue.current === value) return
+    prevValue.current = value
     const controls = animate(mv, value, { duration: 0.2, ease: "easeOut" })
     return () => controls.stop()
   }, [value, mv])

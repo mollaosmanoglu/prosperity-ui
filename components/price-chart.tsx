@@ -135,13 +135,14 @@ const PriceChartInner = memo(function PriceChartInner({ data: fullData, product 
   const sampledData = useMemo(() => lttb(fullData, SAMPLE_TARGET, d => d.mid), [fullData])
   const data = resolution === "sampled" ? sampledData : fullData
 
+  const barData = useMemo(() => lttb(fullData, 200, d => d.mid), [fullData])
   const spreadData = useMemo(
-    () => sampledData.map((d) => ({ tick: d.tick, spread: Math.round((d.ask - d.bid) * 10) / 10 })),
-    [sampledData]
+    () => barData.map((d) => ({ tick: d.tick, spread: Math.round((d.ask - d.bid) * 10) / 10 })),
+    [barData]
   )
   const volumeData = useMemo(
-    () => sampledData.map((d, i) => ({ tick: d.tick, volume: Math.round((d.ask - d.bid) * (3 + (i % 5) + 1)) })),
-    [sampledData]
+    () => barData.map((d, i) => ({ tick: d.tick, volume: Math.round((d.ask - d.bid) * (3 + (i % 5) + 1)) })),
+    [barData]
   )
 
   function toggleSeries(key: string) {
