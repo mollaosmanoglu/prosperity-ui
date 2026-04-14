@@ -9,15 +9,18 @@ export const OrderBook = memo(function OrderBook() {
   const { selectedProduct } = useData()
   const { orderBook } = useTick()
 
-  // Market pressure: bid volume vs ask volume
-  const { pressure, pressurePct } = useMemo(() => {
+  const { pressure, pressurePct, maxSize } = useMemo(() => {
     const totalBid = orderBook.bids.reduce((s, b) => s + b.size, 0)
     const totalAsk = orderBook.asks.reduce((s, a) => s + a.size, 0)
     const total = totalBid + totalAsk
-    if (total === 0) return { pressure: 0, pressurePct: 50 }
+    const allSizes = [...orderBook.bids, ...orderBook.asks].map(l => l.size)
+    const max = Math.max(...allSizes, 1)
+    if (total === 0) return { pressure: 0, pressurePct: 50, maxSize: max }
     const pct = (totalBid / total) * 100
-    return { pressure: Math.round((pct - 50) * 2) / 100, pressurePct: pct }
+    return { pressure: Math.round((pct - 50) * 2) / 100, pressurePct: pct, maxSize: max }
   }, [orderBook])
+
+  const bidsHeavy = pressurePct > 50
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
@@ -49,12 +52,16 @@ export const OrderBook = memo(function OrderBook() {
           <span className="text-left">00</span>
         </div>
 
-        {/* Asks (red side) */}
+        {/* Asks (red side) — bars grow from right */}
         {orderBook.asks.map((level, i) => (
-          <div key={i} className="grid grid-cols-3 gap-1 py-0.5">
-            <span className="text-right" />
-            <AnimatedNumber value={level.price} format={(n) => Math.round(n).toLocaleString()} className="text-center text-red-500" />
-            <AnimatedNumber value={level.size} format={(n) => Math.round(n).toString()} className="text-left font-semibold text-red-500" />
+          <div key={i} className="relative grid grid-cols-3 gap-1 py-0.5 overflow-hidden">
+            <div
+              className="absolute right-0 h-full bg-red-500/10 rounded-l transition-[width] duration-150"
+              style={{ width: `${Math.min((level.size / maxSize) * 66, 66)}%` }}
+            />
+            <span className="relative text-right" />
+            <AnimatedNumber value={level.price} format={(n) => Math.round(n).toLocaleString()} className="relative text-center text-red-500" />
+            <AnimatedNumber value={level.size} format={(n) => Math.round(n).toString()} className="relative text-left font-semibold text-red-500" />
           </div>
         ))}
 
@@ -63,12 +70,16 @@ export const OrderBook = memo(function OrderBook() {
           MID: <AnimatedNumber value={orderBook.midPrice} format={(n) => n.toFixed(1)} />
         </div>
 
-        {/* Bids (green side) */}
+        {/* Bids (green side) — bars grow from left */}
         {orderBook.bids.map((level, i) => (
-          <div key={i} className="grid grid-cols-3 gap-1 py-0.5">
-            <AnimatedNumber value={level.size} format={(n) => Math.round(n).toString()} className="text-right font-semibold text-emerald-500" />
-            <AnimatedNumber value={level.price} format={(n) => Math.round(n).toLocaleString()} className="text-center text-emerald-500" />
-            <span className="text-left" />
+          <div key={i} className="relative grid grid-cols-3 gap-1 py-0.5 overflow-hidden">
+            <div
+              className="absolute left-0 h-full bg-emerald-500/10 rounded-r transition-[width] duration-150"
+              style={{ width: `${Math.min((level.size / maxSize) * 66, 66)}%` }}
+            />
+            <AnimatedNumber value={level.size} format={(n) => Math.round(n).toString()} className="relative text-right font-semibold text-emerald-500" />
+            <AnimatedNumber value={level.price} format={(n) => Math.round(n).toLocaleString()} className="relative text-center text-emerald-500" />
+            <span className="relative text-left" />
           </div>
         ))}
 
@@ -89,14 +100,14 @@ export const OrderBook = memo(function OrderBook() {
           </div>
           <AnimatedNumber value={pressure} format={(n) => `${n.toFixed(2)}%`} className="text-[10px] font-mono font-semibold" />
         </div>
-        <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-zinc-100">
-          <div className="absolute inset-y-0 left-1/2 w-px bg-zinc-300" />
+        <div className="relative flex h-1.5 w-full overflow-hidden rounded-full bg-zinc-100">
           <div
-            className="absolute inset-y-0 bg-emerald-400/60 rounded-full transition-all duration-200 ease-out"
-            style={{
-              left: `${Math.min(pressurePct, 50)}%`,
-              width: `${Math.abs(pressurePct - 50)}%`,
-            }}
+            className="h-full bg-emerald-400/60 transition-[width] duration-150"
+            style={{ width: `${pressurePct}%` }}
+          />
+          <div
+            className="h-full bg-red-400/60 transition-[width] duration-150"
+            style={{ width: `${100 - pressurePct}%` }}
           />
         </div>
         <div className="flex justify-between text-[8px] font-medium text-zinc-400 uppercase tracking-wider">

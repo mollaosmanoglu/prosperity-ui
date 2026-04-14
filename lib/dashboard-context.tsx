@@ -22,7 +22,7 @@ import {
   priceData as mockPriceData,
   pnlData as mockPnlData,
   positionData as mockPositionData,
-  orderBook as mockOrderBook,
+  getOrderBookAtTick as mockGetOrderBook,
   TOTAL_TICKS_COUNT as mockTotalTicks,
 } from "@/lib/mock-data"
 
@@ -149,7 +149,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   // ── Tick-dependent (O(1) lookups) ──────────────────────────────────
 
   const orderBook = useMemo(
-    () => (data ? getOrderBook(data, selectedProduct, currentTick) : mockOrderBook),
+    () => (data ? getOrderBook(data, selectedProduct, currentTick) : mockGetOrderBook(currentTick)),
     [data, selectedProduct, currentTick],
   )
 

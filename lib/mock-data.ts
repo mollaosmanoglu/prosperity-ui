@@ -93,17 +93,26 @@ export const priceData = generatePriceSeries(TOTAL_TICKS)
 export const pnlData = generatePnlSeries(TOTAL_TICKS)
 export const positionData = generatePositionSeries(TOTAL_TICKS)
 
-export const orderBook = {
-  spread: 16.0,
-  midPrice: 10000.0,
-  asks: [
-    { price: 10010, size: 30 },
-    { price: 10008, size: 15 },
-  ],
-  bids: [
-    { price: 9992, size: 15 },
-    { price: 9990, size: 30 },
-  ],
+export function getOrderBookAtTick(tick: number) {
+  const p = priceData[Math.min(tick, priceData.length - 1)]
+  if (!p) return { spread: 0, midPrice: 0, asks: [], bids: [] }
+  const rand = seededRandom(tick * 7 + 13)
+  const s1 = Math.round(10 + rand() * 30), s2 = Math.round(5 + rand() * 20)
+  return {
+    spread: Math.round((p.ask - p.bid) * 10) / 10,
+    midPrice: p.mid,
+    asks: [
+      { price: Math.round(p.ask + 2), size: s1 },
+      { price: Math.round(p.ask), size: s2 },
+    ],
+    bids: [
+      { price: Math.round(p.bid), size: Math.round(5 + rand() * 20) },
+      { price: Math.round(p.bid - 2), size: Math.round(10 + rand() * 30) },
+    ],
+  }
 }
+
+// Static fallback for initial render
+export const orderBook = getOrderBookAtTick(0)
 
 export const TOTAL_TICKS_COUNT = TOTAL_TICKS
