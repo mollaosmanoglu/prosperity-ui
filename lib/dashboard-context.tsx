@@ -106,13 +106,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const runningStats = useMemo(() => {
     const pLen = pnlDataFull.length
-    const prLen = priceDataFull.length
-    const n = Math.max(pLen, prLen)
-    const drawdown = new Float64Array(n)
-    const volatility = new Float64Array(n)
-    const spreadEff = new Float64Array(n)
+    const drawdown = new Float64Array(pLen)
 
-    // Running max drawdown
     let peak = -Infinity, maxDD = 0
     for (let i = 0; i < pLen; i++) {
       if (pnlDataFull[i].total > peak) peak = pnlDataFull[i].total
@@ -121,28 +116,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       drawdown[i] = maxDD
     }
 
-    // Running volatility + spread efficiency
-    let sumC = 0, sumC2 = 0, sSum = 0, sCount = 0
-    for (let i = 0; i < prLen; i++) {
-      if (i > 0) {
-        const c = priceDataFull[i].mid - priceDataFull[i - 1].mid
-        sumC += c
-        sumC2 += c * c
-      }
-      if (i > 0) {
-        const mean = sumC / i
-        volatility[i] = Math.sqrt(Math.max(0, sumC2 / i - mean * mean))
-      }
-      const p = priceDataFull[i]
-      if (p.bid && p.ask && p.mid) {
-        sSum += (p.ask - p.bid) / p.mid
-        sCount++
-      }
-      spreadEff[i] = sCount > 0 ? (sSum / sCount) * 100 : 0
-    }
-
-    return { drawdown, volatility, spreadEff }
-  }, [pnlDataFull, priceDataFull])
+    return { drawdown }
+  }, [pnlDataFull])
 
   const logs = useMemo(() => (data?.logs ?? mockLogs), [data])
 
@@ -186,13 +161,30 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const marketDynamics = useMemo<MarketDynamicsData>(() => {
     const t = Math.min(currentTick, priceDataFull.length - 1)
-    const pos = positionDataFull[Math.min(currentTick, positionDataFull.length - 1)]?.position ?? 0
-    return {
-      volatility: `${(runningStats.volatility[t] ?? 0).toFixed(2)} pts`,
-      tradeMomentum: `${pos} vol`,
-      spreadEfficiency: `${(runningStats.spreadEff[t] ?? 0).toFixed(3)}%`,
+    const cur = priceDataFull[t]
+    // Volatility: population stddev of mid prices over 21-tick rolling window
+    const wStart = Math.max(0, t - 20)
+    const window = priceDataFull.slice(wStart, t + 1)
+    let vol = 0
+    if (window.length > 1) {
+      const mean = window.reduce((s, p) => s + p.mid, 0) / window.length
+      const variance = window.reduce((s, p) => s + (p.mid - mean) ** 2, 0) / window.length
+      vol = Math.sqrt(variance)
     }
-  }, [currentTick, priceDataFull, positionDataFull, runningStats])
+    // Trade momentum: net trade volume at this tick only
+    const rows = data?.activitiesByProduct.get(selectedProduct) ?? []
+    const row = rows[t]
+    const tickTs = row ? row.timestamp + (row.day === 0 ? 100000 : 0) : -1
+    const trades = data?.tradesByProduct.get(selectedProduct) ?? []
+    const mom = trades.filter(f => f.timestamp === tickTs).reduce((s, f) => s + (f.side === "BUY" ? f.quantity : -f.quantity), 0)
+    // Spread efficiency: current tick's spread / mid
+    const eff = cur.mid ? ((cur.ask - cur.bid) / cur.mid) * 100 : 0
+    return {
+      volatility: `${vol.toFixed(2)} pts`,
+      tradeMomentum: `${mom} vol`,
+      spreadEfficiency: `${eff.toFixed(3)}%`,
+    }
+  }, [currentTick, priceDataFull, data, selectedProduct])
 
   const allFills = useMemo(() => (data?.fills ?? mockFills), [data])
   const fills = useMemo(() => {

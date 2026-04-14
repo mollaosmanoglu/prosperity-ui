@@ -32,7 +32,7 @@ export function TickScrubber() {
           stop()
           return maxTick
         }
-        return t + 50
+        return t + 25
       })
     }, 80)
     return () => clearInterval(id)

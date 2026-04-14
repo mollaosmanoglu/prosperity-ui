@@ -52,16 +52,26 @@ export const OrderBook = memo(function OrderBook() {
           <span className="text-left">00</span>
         </div>
 
-        {/* Asks (red side) — bars grow from right */}
-        {orderBook.asks.map((level, i) => (
+        {/* Asks (red side) — bars grow from right, fixed 3 rows */}
+        {Array.from({ length: 3 }, (_, i) => orderBook.asks[i]).map((level, i) => (
           <div key={i} className="relative grid grid-cols-3 gap-1 py-0.5 overflow-hidden">
-            <div
-              className="absolute right-0 h-full bg-red-500/10 rounded-l transition-[width] duration-150"
-              style={{ width: `${Math.min((level.size / maxSize) * 66, 66)}%` }}
-            />
-            <span className="relative text-right" />
-            <AnimatedNumber value={level.price} format={(n) => Math.round(n).toLocaleString()} className="relative text-center text-red-500" />
-            <AnimatedNumber value={level.size} format={(n) => Math.round(n).toString()} className="relative text-left font-semibold text-red-500" />
+            {level ? (
+              <>
+                <div
+                  className="absolute right-0 h-full bg-red-500/10 rounded-l transition-[width] duration-150"
+                  style={{ width: `${Math.min((level.size / maxSize) * 66, 66)}%` }}
+                />
+                <span className="relative text-right" />
+                <AnimatedNumber value={level.price} format={(n) => Math.round(n).toLocaleString()} className="relative text-center text-red-500" />
+                <AnimatedNumber value={level.size} format={(n) => Math.round(n).toString()} className="relative text-left font-semibold text-red-500" />
+              </>
+            ) : (
+              <>
+                <span className="text-right" />
+                <span className="text-center text-zinc-300">&mdash;</span>
+                <span className="text-left" />
+              </>
+            )}
           </div>
         ))}
 
@@ -70,16 +80,26 @@ export const OrderBook = memo(function OrderBook() {
           MID: <AnimatedNumber value={orderBook.midPrice} format={(n) => n.toFixed(1)} />
         </div>
 
-        {/* Bids (green side) — bars grow from left */}
-        {orderBook.bids.map((level, i) => (
+        {/* Bids (green side) — bars grow from left, fixed 3 rows */}
+        {Array.from({ length: 3 }, (_, i) => orderBook.bids[i]).map((level, i) => (
           <div key={i} className="relative grid grid-cols-3 gap-1 py-0.5 overflow-hidden">
-            <div
-              className="absolute left-0 h-full bg-emerald-500/10 rounded-r transition-[width] duration-150"
-              style={{ width: `${Math.min((level.size / maxSize) * 66, 66)}%` }}
-            />
-            <AnimatedNumber value={level.size} format={(n) => Math.round(n).toString()} className="relative text-right font-semibold text-emerald-500" />
-            <AnimatedNumber value={level.price} format={(n) => Math.round(n).toLocaleString()} className="relative text-center text-emerald-500" />
-            <span className="relative text-left" />
+            {level ? (
+              <>
+                <div
+                  className="absolute left-0 h-full bg-emerald-500/10 rounded-r transition-[width] duration-150"
+                  style={{ width: `${Math.min((level.size / maxSize) * 66, 66)}%` }}
+                />
+                <AnimatedNumber value={level.size} format={(n) => Math.round(n).toString()} className="relative text-right font-semibold text-emerald-500" />
+                <AnimatedNumber value={level.price} format={(n) => Math.round(n).toLocaleString()} className="relative text-center text-emerald-500" />
+                <span className="relative text-left" />
+              </>
+            ) : (
+              <>
+                <span className="text-right" />
+                <span className="text-center text-zinc-300">&mdash;</span>
+                <span className="text-left" />
+              </>
+            )}
           </div>
         ))}
 
