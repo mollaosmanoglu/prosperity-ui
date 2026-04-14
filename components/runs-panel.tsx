@@ -1,24 +1,11 @@
 "use client"
 
-import { useState } from "react"
-import { GitCompare, Plus, Eye, EyeOff } from "lucide-react"
-import { useData } from "@/lib/dashboard-context"
-
-const RUN_COLORS = ["#18181b", "#2563eb", "#d946ef", "#f97316", "#06b6d4"]
+import { GitCompare, Eye, EyeOff } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
+import { useData, RUN_COLORS } from "@/lib/dashboard-context"
 
 export function RunsPanel() {
-  const { runs, activeRun, setActiveRun } = useData()
-  const [hidden, setHidden] = useState<Set<string>>(new Set())
-
-  function toggleVisibility(name: string) {
-    setHidden(prev => {
-      const next = new Set(prev)
-      const visibleCount = runs.length - next.size
-      if (next.has(name)) next.delete(name)
-      else if (visibleCount > 1) next.add(name)
-      return next
-    })
-  }
+  const { runs, activeRun, setActiveRun, comparing, setComparing, hiddenRuns, toggleRunVisibility } = useData()
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
@@ -27,7 +14,12 @@ export function RunsPanel() {
           <GitCompare className="size-4 text-zinc-500" />
           <h3 className="text-xs font-semibold">Runs</h3>
         </div>
-        <span className="text-[10px] text-zinc-400">{runs.length} loaded</span>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-1.5 cursor-pointer">
+            <span className="text-[10px] text-zinc-400">Compare</span>
+            <Switch checked={comparing} onCheckedChange={setComparing} className="scale-75" />
+          </label>
+        </div>
       </div>
 
       {/* Table */}
@@ -39,7 +31,7 @@ export function RunsPanel() {
           <span />
         </div>
         {runs.map((run, i) => {
-          const visible = !hidden.has(run.name)
+          const visible = !hiddenRuns.has(run.name)
           const color = RUN_COLORS[i % RUN_COLORS.length]
           return (
             <div
@@ -57,16 +49,18 @@ export function RunsPanel() {
                 {run.totalPnl > 0 ? "+" : ""}{run.totalPnl.toLocaleString()}
               </span>
               <span className="text-[11px] font-mono text-zinc-400 text-right">{run.trades}</span>
-              <button
-                onClick={(e) => { e.stopPropagation(); toggleVisibility(run.name) }}
-                className="flex items-center justify-center"
-              >
-                {visible ? (
-                  <Eye className="size-3 text-zinc-400 hover:text-zinc-600 transition-colors" />
-                ) : (
-                  <EyeOff className="size-3 text-zinc-300 hover:text-zinc-500 transition-colors" />
-                )}
-              </button>
+              {comparing && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); toggleRunVisibility(run.name) }}
+                  className="flex items-center justify-center"
+                >
+                  {visible ? (
+                    <Eye className="size-3 text-zinc-400 hover:text-zinc-600 transition-colors" />
+                  ) : (
+                    <EyeOff className="size-3 text-zinc-300 hover:text-zinc-500 transition-colors" />
+                  )}
+                </button>
+              )}
             </div>
           )
         })}

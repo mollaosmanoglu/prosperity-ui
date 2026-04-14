@@ -13,7 +13,7 @@ import {
   ReferenceLine,
 } from "recharts"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
-import { useData } from "@/lib/dashboard-context"
+import { useData, type ComparisonSeries } from "@/lib/dashboard-context"
 import { ChartCursor } from "@/components/chart-cursor"
 import { lttb } from "@/lib/lttb"
 import type { PositionPoint } from "@/lib/parse-log"
@@ -31,7 +31,10 @@ const TOOLTIP_STYLE = {
 const SAMPLE_TARGET = 200
 
 export function PositionChart() {
-  const { positionDataFull, selectedProduct } = useData()
+  const { positionDataFull, selectedProduct, comparisonPosition, comparisonRuns } = useData()
+  if (comparisonPosition) {
+    return <PositionComparisonInner data={comparisonPosition} runs={comparisonRuns} product={selectedProduct} />
+  }
   return <PositionChartInner data={positionDataFull} product={selectedProduct} />
 }
 
@@ -72,6 +75,61 @@ const PositionChartInner = memo(function PositionChartInner({ data, product }: {
             {renderChart("h-[80vh]")}
           </DialogContent>
         </Dialog>
+      </div>
+      <div className="relative overflow-hidden">
+        {renderChart("h-44")}
+        <ChartCursor style={CURSOR_STYLE} />
+      </div>
+    </div>
+  )
+})
+
+const PositionComparisonInner = memo(function PositionComparisonInner({ data, runs, product }: { data: Record<string, number>[], runs: ComparisonSeries[], product: string }) {
+  const sampled = useMemo(() => lttb(data, SAMPLE_TARGET, d => d[runs[0]?.name] ?? 0), [data, runs])
+
+  function renderChart(height: string) {
+    return (
+      <div className={height}>
+        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+          <LineChart data={sampled} margin={MARGIN}>
+            <CartesianGrid stroke="#f0f0f0" />
+            <XAxis dataKey="tick" tick={TICK_STYLE} tickLine={false} axisLine={AXIS_LINE} />
+            <YAxis domain={Y_DOMAIN} tick={TICK_STYLE} tickLine={false} axisLine={false} width={30} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <ReferenceLine y={0} stroke="#a1a1aa" strokeDasharray="3 3" />
+            {runs.map(r => (
+              <Line key={r.name} isAnimationActive={false} type="monotone" dataKey={r.name} stroke={r.color} dot={false} strokeWidth={1.5} />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-xs font-semibold">Position Comparison: {product}</h3>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            {runs.map(r => (
+              <div key={r.name} className="flex items-center gap-1">
+                <div className="size-2 rounded-full" style={{ backgroundColor: r.color }} />
+                <span className="text-[10px] text-zinc-500 truncate max-w-20">{r.name}</span>
+              </div>
+            ))}
+          </div>
+          <Dialog>
+            <DialogTrigger className="flex items-center gap-1 rounded-md border border-zinc-200 px-2 py-1 text-[10px] text-zinc-500 hover:bg-zinc-50">
+              <Maximize2 className="size-3" />
+              Expand
+            </DialogTrigger>
+            <DialogContent className="!max-w-[95vw] w-full p-6">
+              <h3 className="text-xs font-semibold mb-2">Position Comparison: {product}</h3>
+              {renderChart("h-[80vh]")}
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
       <div className="relative overflow-hidden">
         {renderChart("h-44")}

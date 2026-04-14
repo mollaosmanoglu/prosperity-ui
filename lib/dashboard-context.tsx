@@ -30,12 +30,21 @@ const mockFills: Fill[] = []
 const mockLogs: RawLogEntry[] = []
 const mockProducts = ["EMERALDS", "TOMATOES"]
 
+// ── Shared constants ─────────────────────────────────────────────────
+
+export const RUN_COLORS = ["#18181b", "#2563eb", "#d946ef", "#f97316", "#06b6d4"]
+
 // ── Context types ────────────────────────────────────────────────────
 
 export interface RunInfo {
   name: string
   totalPnl: number
   trades: number
+}
+
+export interface ComparisonSeries {
+  name: string
+  color: string
 }
 
 interface DataContextValue {
@@ -50,6 +59,13 @@ interface DataContextValue {
   runs: RunInfo[]
   activeRun: string
   setActiveRun: (name: string) => void
+  comparing: boolean
+  setComparing: (v: boolean) => void
+  hiddenRuns: Set<string>
+  toggleRunVisibility: (name: string) => void
+  comparisonRuns: ComparisonSeries[]
+  comparisonPnl: Record<string, number>[] | null
+  comparisonPosition: Record<string, number>[] | null
   logs: RawLogEntry[]
   loadLog: (text: string, fileName?: string) => void
 }
@@ -80,6 +96,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [currentTick, setCurrentTick] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [scrubbing, setScrubbing] = useState(false)
+  const [comparing, setComparing] = useState(false)
+  const [hiddenRuns, setHiddenRuns] = useState<Set<string>>(new Set())
 
   const data = allRuns.get(activeRun) ?? null
 
@@ -145,6 +163,15 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const logs = useMemo(() => (data?.logs ?? mockLogs), [data])
 
+  const toggleRunVisibility = useCallback((name: string) => {
+    setHiddenRuns(prev => {
+      const next = new Set(prev)
+      if (next.has(name)) next.delete(name)
+      else next.add(name)
+      return next
+    })
+  }, [])
+
   const runs = useMemo<RunInfo[]>(() => {
     const mockLast = mockPnlData[mockPnlData.length - 1]
     const mockTrades = mockPriceData.filter(p => p.buyFill != null || p.sellFill != null).length
@@ -162,6 +189,54 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     }
     return list
   }, [allRuns])
+
+  // ── Comparison data (only when 2+ runs visible) ────────────────────
+
+  const comparisonRuns = useMemo<ComparisonSeries[]>(() => {
+    return runs
+      .map((r, i) => ({ name: r.name, color: RUN_COLORS[i % RUN_COLORS.length] }))
+      .filter(r => !hiddenRuns.has(r.name))
+  }, [runs, hiddenRuns])
+
+  const comparisonPnl = useMemo(() => {
+    if (!comparing || comparisonRuns.length <= 1) return null
+    const runData = comparisonRuns.map(r => {
+      if (r.name === "Tutorial Sub") return mockPnlData
+      const d = allRuns.get(r.name)
+      return d ? getPnlData(d) : []
+    })
+    const maxTicks = Math.max(...runData.map(d => d.length))
+    const merged: Record<string, number>[] = []
+    for (let t = 0; t < maxTicks; t++) {
+      const point: Record<string, number> = { tick: t }
+      for (let j = 0; j < comparisonRuns.length; j++) {
+        const pnl = runData[j][t]
+        if (pnl) point[comparisonRuns[j].name] = (pnl as Record<string, number>)[selectedProduct.toLowerCase()] ?? pnl.total
+      }
+      merged.push(point)
+    }
+    return merged
+  }, [comparing, comparisonRuns, allRuns, selectedProduct])
+
+  const comparisonPosition = useMemo(() => {
+    if (!comparing || comparisonRuns.length <= 1) return null
+    const runData = comparisonRuns.map(r => {
+      if (r.name === "Tutorial Sub") return mockPositionData
+      const d = allRuns.get(r.name)
+      return d ? getPositionData(d, selectedProduct) : []
+    })
+    const maxTicks = Math.max(...runData.map(d => d.length))
+    const merged: Record<string, number>[] = []
+    for (let t = 0; t < maxTicks; t++) {
+      const point: Record<string, number> = { tick: t }
+      for (let j = 0; j < comparisonRuns.length; j++) {
+        const pos = runData[j][t]
+        if (pos) point[comparisonRuns[j].name] = pos.position
+      }
+      merged.push(point)
+    }
+    return merged
+  }, [comparing, comparisonRuns, allRuns, selectedProduct])
 
   // ── Tick-dependent (O(1) lookups) ──────────────────────────────────
 
@@ -244,8 +319,11 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     data, products, selectedProduct, setSelectedProduct,
     totalTicks, priceDataFull, pnlDataFull, positionDataFull,
     runs, activeRun, setActiveRun: switchRun,
+    comparing, setComparing,
+    hiddenRuns, toggleRunVisibility,
+    comparisonRuns, comparisonPnl, comparisonPosition,
     logs, loadLog,
-  }), [data, products, selectedProduct, totalTicks, priceDataFull, pnlDataFull, positionDataFull, runs, activeRun, switchRun, logs, loadLog])
+  }), [data, products, selectedProduct, totalTicks, priceDataFull, pnlDataFull, positionDataFull, runs, activeRun, switchRun, comparing, hiddenRuns, toggleRunVisibility, comparisonRuns, comparisonPnl, comparisonPosition, logs, loadLog])
 
   const tickValue = useMemo<TickContextValue>(() => ({
     currentTick, setCurrentTick, playing, setPlaying, scrubbing, setScrubbing,
