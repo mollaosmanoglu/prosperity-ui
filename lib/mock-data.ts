@@ -12,11 +12,10 @@ function generatePriceSeries(ticks: number) {
   const rand = seededRandom(42)
   const data: {
     tick: number
-    bid: number
-    ask: number
-    mid: number
-    buyFill?: number
-    sellFill?: number
+    bid: number; ask: number; mid: number
+    bid2?: number; bid3?: number; ask2?: number; ask3?: number
+    domMid?: number; micro?: number; deepVamp?: number
+    buyFill?: number; sellFill?: number
   }[] = []
 
   let mid = 10000
@@ -27,14 +26,41 @@ function generatePriceSeries(ticks: number) {
     const spread = 8 + rand() * 8
     const halfSpread = spread / 2
 
+    const bid = Math.round((mid - halfSpread) * 10) / 10
+    const ask = Math.round((mid + halfSpread) * 10) / 10
+
+    // L2/L3 depth levels
+    const bid2 = Math.round((bid - 2 - rand() * 3) * 10) / 10
+    const bid3 = Math.round((bid2 - 2 - rand() * 3) * 10) / 10
+    const ask2 = Math.round((ask + 2 + rand() * 3) * 10) / 10
+    const ask3 = Math.round((ask2 + 2 + rand() * 3) * 10) / 10
+
+    // Sizes for computing derived prices
+    const bs0 = 10 + rand() * 30, as0 = 10 + rand() * 30
+    const bs1 = 5 + rand() * 20, as1 = 5 + rand() * 20
+    const bs2 = 5 + rand() * 15, as2 = 5 + rand() * 15
+
+    // Dom Mid: midpoint of levels with largest size
+    const domBidPrice = bs1 > bs0 && bs1 > bs2 ? bid2 : bs2 > bs0 ? bid3 : bid
+    const domAskPrice = as1 > as0 && as1 > as2 ? ask2 : as2 > as0 ? ask3 : ask
+    const domMid = Math.round((domBidPrice + domAskPrice) / 2 * 10) / 10
+
+    // Micro: L1 size-weighted mid
+    const microTotal = bs0 + as0
+    const micro = microTotal > 0 ? Math.round((bid * as0 + ask * bs0) / microTotal * 10) / 10 : mid
+
+    // Deep VAMP: all-level size-weighted mid
+    const vampNum = ask * bs0 + bid * as0 + ask2 * bs1 + bid2 * as1 + ask3 * bs2 + bid3 * as2
+    const vampDen = bs0 + as0 + bs1 + as1 + bs2 + as2
+    const deepVamp = vampDen > 0 ? Math.round(vampNum / vampDen * 10) / 10 : mid
+
     const point: (typeof data)[number] = {
       tick: i,
-      bid: Math.round((mid - halfSpread) * 10) / 10,
-      ask: Math.round((mid + halfSpread) * 10) / 10,
-      mid: Math.round(mid * 10) / 10,
+      bid, ask, mid: Math.round(mid * 10) / 10,
+      bid2, bid3, ask2, ask3,
+      domMid, micro, deepVamp,
     }
 
-    // Scatter some fills
     if (rand() < 0.03) point.buyFill = point.ask + rand() * 2
     if (rand() < 0.03) point.sellFill = point.bid - rand() * 2
 

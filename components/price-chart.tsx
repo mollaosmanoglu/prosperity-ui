@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useCallback, memo } from "react"
-import { Maximize2 } from "lucide-react"
+import { SlidersHorizontal, Maximize2 } from "lucide-react"
 import { PillTabs } from "@/components/pill-tabs"
 import {
   Bar,
@@ -14,6 +14,7 @@ import {
   ComposedChart,
   BarChart,
 } from "recharts"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { useData } from "@/lib/dashboard-context"
 import { ChartCursor } from "@/components/chart-cursor"
@@ -270,24 +271,27 @@ const PriceChartInner = memo(function PriceChartInner({ data: fullData, product 
                   </button>
                 )
               })}
-              {ADVANCED_KEYS.map((adv) => {
-                const active = advanced.has(adv.id)
-                return (
-                  <button
-                    key={adv.id}
-                    onClick={() => toggleAdvanced(adv.id)}
-                    className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-medium transition-colors ${
-                      active ? "bg-zinc-100 text-zinc-900" : "text-zinc-400"
-                    }`}
-                  >
-                    <span
-                      className="size-1.5 rounded-full"
-                      style={{ backgroundColor: active ? seriesColors[adv.dataKeys[0]] : "#d4d4d8" }}
-                    />
-                    {adv.id}
-                  </button>
-                )
-              })}
+              <Popover>
+                <PopoverTrigger className="flex size-6 items-center justify-center rounded-md border border-zinc-200 text-zinc-500 hover:bg-zinc-50">
+                  <SlidersHorizontal className="size-3" />
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-44 p-2">
+                  <p className="mb-1.5 text-[10px] font-medium text-zinc-400">Advanced</p>
+                  <div className="flex flex-wrap gap-1">
+                    {ADVANCED_KEYS.map((adv) => (
+                      <button
+                        key={adv.id}
+                        onClick={() => toggleAdvanced(adv.id)}
+                        className={`rounded-md px-2 py-0.5 text-[10px] font-medium transition-colors ${
+                          advanced.has(adv.id) ? "bg-zinc-900 text-white" : "border border-zinc-200 text-zinc-500 hover:bg-zinc-100"
+                        }`}
+                      >
+                        {adv.id}
+                      </button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           )}
       </div>
