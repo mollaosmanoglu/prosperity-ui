@@ -13,7 +13,9 @@ import {
   ReferenceLine,
 } from "recharts"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
-import { useDashboard } from "@/lib/dashboard-context"
+import { useData } from "@/lib/dashboard-context"
+import { ChartCursor } from "@/components/chart-cursor"
+import { lttb } from "@/lib/lttb"
 import type { PositionPoint } from "@/lib/parse-log"
 
 const MARGIN = { top: 5, right: 5, bottom: 5, left: 5 }
@@ -26,19 +28,18 @@ const TOOLTIP_STYLE = {
   border: "1px solid #e4e4e7",
   boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
 }
+const SAMPLE_TARGET = 500
 
-// Thin wrapper: re-renders on tick (cheap), passes stable refs to inner
 export function PositionChart() {
-  const { positionDataFull, selectedProduct, currentTick, totalTicks } = useDashboard()
-  const progress = currentTick > 0 ? currentTick / Math.max(totalTicks - 1, 1) : null
-  return <PositionChartInner data={positionDataFull} product={selectedProduct} cursorProgress={progress} />
+  const { positionDataFull, selectedProduct } = useData()
+  return <PositionChartInner data={positionDataFull} product={selectedProduct} />
 }
 
 // margin.left(5) + yAxis(30) = 35px, margin.right(5) = 5px
-const CURSOR_POS = (p: number) => ({ left: `calc(35px + (100% - 40px) * ${p})`, width: 2, background: '#18181b', opacity: 0.2 })
+const CURSOR_STYLE = (p: number) => ({ left: `calc(35px + (100% - 40px) * ${p})`, width: 2, background: '#18181b', opacity: 0.2 })
 
-const PositionChartInner = memo(function PositionChartInner({ data, product, cursorProgress }: { data: PositionPoint[], product: string, cursorProgress: number | null }) {
-  const sampled = useMemo(() => data.filter((_, i) => i % 10 === 0), [data])
+const PositionChartInner = memo(function PositionChartInner({ data, product }: { data: PositionPoint[], product: string }) {
+  const sampled = useMemo(() => lttb(data, SAMPLE_TARGET, d => d.position), [data])
 
   function renderChart(height: string) {
     return (
@@ -74,7 +75,7 @@ const PositionChartInner = memo(function PositionChartInner({ data, product, cur
       </div>
       <div className="relative overflow-hidden">
         {renderChart("h-44")}
-        {cursorProgress != null && <div className="absolute top-1 bottom-1 pointer-events-none" style={CURSOR_POS(cursorProgress)} />}
+        <ChartCursor style={CURSOR_STYLE} />
       </div>
     </div>
   )

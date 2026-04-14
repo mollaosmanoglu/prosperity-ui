@@ -12,7 +12,9 @@ import {
   ResponsiveContainer,
 } from "recharts"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
-import { useDashboard } from "@/lib/dashboard-context"
+import { useData } from "@/lib/dashboard-context"
+import { ChartCursor } from "@/components/chart-cursor"
+import { lttb } from "@/lib/lttb"
 import type { PnlPoint } from "@/lib/parse-log"
 
 const MARGIN = { top: 5, right: 5, bottom: 5, left: 5 }
@@ -30,18 +32,18 @@ const PRODUCT_COLORS: Record<string, string> = {
   TOMATOES: "#e11d48",
 }
 const DEFAULT_COLOR = "#2563eb"
+const SAMPLE_TARGET = 500
 
-// Thin wrapper: re-renders on tick (cheap), passes stable refs to inner
 export function PnlChart() {
-  const { pnlDataFull, selectedProduct, currentTick, totalTicks } = useDashboard()
-  const progress = currentTick > 0 ? currentTick / Math.max(totalTicks - 1, 1) : null
-  return <PnlChartInner data={pnlDataFull} product={selectedProduct} cursorProgress={progress} />
+  const { pnlDataFull, selectedProduct } = useData()
+  return <PnlChartInner data={pnlDataFull} product={selectedProduct} />
 }
 
-const CURSOR_PNL = (p: number) => ({ left: `calc(55px + (100% - 60px) * ${p})`, width: 2, background: '#18181b', opacity: 0.2 })
+// margin.left(5) + yAxis(50) = 55px, margin.right(5) = 5px
+const CURSOR_STYLE = (p: number) => ({ left: `calc(55px + (100% - 60px) * ${p})`, width: 2, background: '#18181b', opacity: 0.2 })
 
-const PnlChartInner = memo(function PnlChartInner({ data, product, cursorProgress }: { data: PnlPoint[], product: string, cursorProgress: number | null }) {
-  const sampled = useMemo(() => data.filter((_, i) => i % 10 === 0), [data])
+const PnlChartInner = memo(function PnlChartInner({ data, product }: { data: PnlPoint[], product: string }) {
+  const sampled = useMemo(() => lttb(data, SAMPLE_TARGET, d => d.total), [data])
   const productKey = product.toLowerCase()
   const productColor = PRODUCT_COLORS[product] ?? DEFAULT_COLOR
 
@@ -91,7 +93,7 @@ const PnlChartInner = memo(function PnlChartInner({ data, product, cursorProgres
       </div>
       <div className="relative overflow-hidden">
         {renderChart("h-52")}
-        {cursorProgress != null && <div className="absolute top-1 bottom-1 pointer-events-none" style={CURSOR_PNL(cursorProgress)} />}
+        <ChartCursor style={CURSOR_STYLE} />
       </div>
     </div>
   )

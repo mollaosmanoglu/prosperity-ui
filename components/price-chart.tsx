@@ -16,7 +16,9 @@ import {
 } from "recharts"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
-import { useDashboard } from "@/lib/dashboard-context"
+import { useData } from "@/lib/dashboard-context"
+import { ChartCursor } from "@/components/chart-cursor"
+import { lttb } from "@/lib/lttb"
 import type { PricePoint } from "@/lib/parse-log"
 
 type ChartView = "prices" | "spread" | "volume"
@@ -41,6 +43,7 @@ const SERIES_LABELS: Record<string, { label: string; color: string }> = {
 }
 
 const ADVANCED_KEYS = ["Depth", "Dom Mid", "Micro", "Deep VAMP"] as const
+const SAMPLE_TARGET = 500
 
 const CHART_TICK = { fontSize: 10, fill: "#a1a1aa" }
 const CHART_MARGIN = { top: 5, right: 5, bottom: 5, left: 5 }
@@ -115,22 +118,21 @@ function PriceTooltip({ active, payload, label }: any) {
   )
 }
 
+// margin.left(5) + yAxis(50) = 55px left offset, margin.right(5) = 5px right offset
+const CURSOR_STYLE = (p: number) => ({ left: `calc(55px + (100% - 60px) * ${p})`, width: 2, background: '#18181b', opacity: 0.2 })
+
 export function PriceChart() {
-  const { priceDataFull, selectedProduct, currentTick, totalTicks } = useDashboard()
-  const progress = currentTick > 0 ? currentTick / Math.max(totalTicks - 1, 1) : null
-  return <PriceChartInner data={priceDataFull} product={selectedProduct} cursorProgress={progress} />
+  const { priceDataFull, selectedProduct } = useData()
+  return <PriceChartInner data={priceDataFull} product={selectedProduct} />
 }
 
-// margin.left(5) + yAxis(50) = 55px left offset, margin.right(5) = 5px right offset
-const CURSOR_STYLE_50 = (p: number) => ({ left: `calc(55px + (100% - 60px) * ${p})`, width: 2, background: '#18181b', opacity: 0.2 })
-
-const PriceChartInner = memo(function PriceChartInner({ data: fullData, product, cursorProgress }: { data: PricePoint[], product: string, cursorProgress: number | null }) {
+const PriceChartInner = memo(function PriceChartInner({ data: fullData, product }: { data: PricePoint[], product: string }) {
   const [view, setView] = useState<ChartView>("prices")
   const [resolution, setResolution] = useState<"sampled" | "full">("sampled")
   const [visible, setVisible] = useState<Set<string>>(new Set(SERIES_KEYS))
   const [advanced, setAdvanced] = useState<Set<string>>(new Set())
 
-  const sampledData = useMemo(() => fullData.filter((_, i) => i % 10 === 0), [fullData])
+  const sampledData = useMemo(() => lttb(fullData, SAMPLE_TARGET, d => d.mid), [fullData])
   const data = resolution === "sampled" ? sampledData : fullData
 
   const spreadData = useMemo(
@@ -275,7 +277,7 @@ const PriceChartInner = memo(function PriceChartInner({ data: fullData, product,
 
       <div className="relative overflow-hidden">
         {renderChart("h-64")}
-        {cursorProgress != null && <div className="absolute top-1 bottom-5 pointer-events-none" style={CURSOR_STYLE_50(cursorProgress)} />}
+        <ChartCursor style={CURSOR_STYLE} />
       </div>
     </div>
   )

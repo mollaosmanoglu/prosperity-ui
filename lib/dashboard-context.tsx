@@ -30,34 +30,37 @@ const mockFills: Fill[] = []
 const mockLogs: RawLogEntry[] = []
 const mockProducts = ["EMERALDS", "TOMATOES"]
 
-interface DashboardContextValue {
-  // State
+// ── Context types ────────────────────────────────────────────────────
+
+interface DataContextValue {
   data: DashboardData | null
   products: string[]
   selectedProduct: string
   setSelectedProduct: (p: string) => void
+  totalTicks: number
+  priceDataFull: PricePoint[]
+  pnlDataFull: PnlPoint[]
+  positionDataFull: PositionPoint[]
+  logs: RawLogEntry[]
+  loadLog: (text: string) => void
+}
+
+interface TickContextValue {
   currentTick: number
   setCurrentTick: React.Dispatch<React.SetStateAction<number>>
   playing: boolean
   setPlaying: React.Dispatch<React.SetStateAction<boolean>>
-  totalTicks: number
-
-  // Full data arrays (stable refs — only change on product/data switch)
-  priceDataFull: PricePoint[]
-  pnlDataFull: PnlPoint[]
-  positionDataFull: PositionPoint[]
   orderBook: OrderBookData
   stats: StatsData
   productSummary: ProductSummaryData
   marketDynamics: MarketDynamicsData
   fills: Fill[]
-  logs: RawLogEntry[]
-
-  // Actions
-  loadLog: (text: string) => void
 }
 
-const DashboardContext = createContext<DashboardContextValue | null>(null)
+const DataContext = createContext<DataContextValue | null>(null)
+const TickContext = createContext<TickContextValue | null>(null)
+
+// ── Provider ─────────────────────────────────────────────────────────
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<DashboardData | null>(null)
@@ -81,50 +84,76 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const products = data?.products ?? mockProducts
   const totalTicks = data?.timestamps.length ?? mockTotalTicks
 
+  // ── Stable full data arrays (change on data load / product switch) ──
+
   const priceDataFull = useMemo(
     () => (data ? getPriceData(data, selectedProduct) : mockPriceData),
     [data, selectedProduct],
   )
-  const priceData = useMemo(
-    () => priceDataFull.slice(0, currentTick + 1),
-    [priceDataFull, currentTick],
-  )
-
   const pnlDataFull = useMemo(
     () => (data ? getPnlData(data) : mockPnlData),
     [data],
   )
-  const pnlData = useMemo(
-    () => pnlDataFull.slice(0, currentTick + 1),
-    [pnlDataFull, currentTick],
-  )
-
   const positionDataFull = useMemo(
     () => (data ? getPositionData(data, selectedProduct) : mockPositionData),
     [data, selectedProduct],
   )
-  const positionData = useMemo(
-    () => positionDataFull.slice(0, currentTick + 1),
-    [positionDataFull, currentTick],
-  )
+
+  // ── Pre-computed running stats: O(n) once, O(1) per tick ───────────
+
+  const runningStats = useMemo(() => {
+    const pLen = pnlDataFull.length
+    const prLen = priceDataFull.length
+    const n = Math.max(pLen, prLen)
+    const drawdown = new Float64Array(n)
+    const volatility = new Float64Array(n)
+    const spreadEff = new Float64Array(n)
+
+    // Running max drawdown
+    let peak = -Infinity, maxDD = 0
+    for (let i = 0; i < pLen; i++) {
+      if (pnlDataFull[i].total > peak) peak = pnlDataFull[i].total
+      const dd = peak - pnlDataFull[i].total
+      if (dd > maxDD) maxDD = dd
+      drawdown[i] = maxDD
+    }
+
+    // Running volatility + spread efficiency
+    let sumC = 0, sumC2 = 0, sSum = 0, sCount = 0
+    for (let i = 0; i < prLen; i++) {
+      if (i > 0) {
+        const c = priceDataFull[i].mid - priceDataFull[i - 1].mid
+        sumC += c
+        sumC2 += c * c
+      }
+      if (i > 0) {
+        const mean = sumC / i
+        volatility[i] = Math.sqrt(Math.max(0, sumC2 / i - mean * mean))
+      }
+      const p = priceDataFull[i]
+      if (p.bid && p.ask && p.mid) {
+        sSum += (p.ask - p.bid) / p.mid
+        sCount++
+      }
+      spreadEff[i] = sCount > 0 ? (sSum / sCount) * 100 : 0
+    }
+
+    return { drawdown, volatility, spreadEff }
+  }, [pnlDataFull, priceDataFull])
+
+  const logs = useMemo(() => (data?.logs ?? mockLogs), [data])
+
+  // ── Tick-dependent (O(1) lookups) ──────────────────────────────────
 
   const orderBook = useMemo(
     () => (data ? getOrderBook(data, selectedProduct, currentTick) : mockOrderBook),
     [data, selectedProduct, currentTick],
   )
 
-  // Derive stats from sliced arrays so they work for both mock and real data
-  const stats = useMemo(() => {
-    const lastPnl = pnlData[pnlData.length - 1]
-    const lastPos = positionData[positionData.length - 1]
-    // Max drawdown
-    let peak = -Infinity, maxDrawdown = 0
-    for (const p of pnlData) {
-      if (p.total > peak) peak = p.total
-      const dd = peak - p.total
-      if (dd > maxDrawdown) maxDrawdown = dd
-    }
-    // Microprice
+  const stats = useMemo<StatsData>(() => {
+    const t = Math.min(currentTick, pnlDataFull.length - 1)
+    const lastPnl = pnlDataFull[t]
+    const lastPos = positionDataFull[Math.min(currentTick, positionDataFull.length - 1)]
     let microprice = orderBook.midPrice
     if (orderBook.bids[0] && orderBook.asks[0]) {
       const bb = orderBook.bids[0], ba = orderBook.asks[0]
@@ -132,53 +161,36 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     }
     return {
       totalPnl: lastPnl?.total ?? 0,
-      maxDrawdown: Math.round(maxDrawdown * 1000) / 1000,
+      maxDrawdown: Math.round((runningStats.drawdown[t] ?? 0) * 1000) / 1000,
       emeraldsPnl: lastPnl?.emeralds ?? 0,
       position: lastPos?.position ?? 0,
       microprice: Math.round(microprice * 100) / 100,
       midPrice: orderBook.midPrice,
     }
-  }, [pnlData, positionData, orderBook])
+  }, [currentTick, pnlDataFull, positionDataFull, orderBook, runningStats])
 
-  const productSummary = useMemo(() => {
-    const lastPos = positionData[positionData.length - 1]
-    const lastPrice = priceData[priceData.length - 1]
+  const productSummary = useMemo<ProductSummaryData>(() => {
+    const lastPos = positionDataFull[Math.min(currentTick, positionDataFull.length - 1)]
+    const lastPrice = priceDataFull[Math.min(currentTick, priceDataFull.length - 1)]
+    const lastPnl = pnlDataFull[Math.min(currentTick, pnlDataFull.length - 1)]
     return {
       position: lastPos?.position ?? 0,
-      pnl: (pnlData[pnlData.length - 1] as Record<string, number>)?.[selectedProduct.toLowerCase()] ?? 0,
+      pnl: (lastPnl as Record<string, number>)?.[selectedProduct.toLowerCase()] ?? 0,
       midPrice: lastPrice?.mid ?? 0,
       spread: orderBook.spread,
     }
-  }, [positionData, priceData, pnlData, selectedProduct, orderBook])
+  }, [currentTick, positionDataFull, priceDataFull, pnlDataFull, selectedProduct, orderBook])
 
-  const marketDynamics = useMemo(() => {
-    // Volatility from price changes
-    const changes: number[] = []
-    for (let i = 1; i < priceData.length; i++) {
-      changes.push(priceData[i].mid - priceData[i - 1].mid)
-    }
-    const mean = changes.reduce((s, c) => s + c, 0) / (changes.length || 1)
-    const variance = changes.reduce((s, c) => s + (c - mean) ** 2, 0) / (changes.length || 1)
-    const volatility = Math.sqrt(variance)
-    // Momentum from position
-    const pos = positionData[positionData.length - 1]?.position ?? 0
-    // Spread efficiency
-    let spreadSum = 0, count = 0
-    for (const p of priceData) {
-      if (p.bid && p.ask && p.mid) {
-        spreadSum += (p.ask - p.bid) / p.mid
-        count++
-      }
-    }
-    const efficiency = count > 0 ? (spreadSum / count) * 100 : 0
+  const marketDynamics = useMemo<MarketDynamicsData>(() => {
+    const t = Math.min(currentTick, priceDataFull.length - 1)
+    const pos = positionDataFull[Math.min(currentTick, positionDataFull.length - 1)]?.position ?? 0
     return {
-      volatility: `${volatility.toFixed(2)} pts`,
+      volatility: `${(runningStats.volatility[t] ?? 0).toFixed(2)} pts`,
       tradeMomentum: `${pos} vol`,
-      spreadEfficiency: `${efficiency.toFixed(3)}%`,
+      spreadEfficiency: `${(runningStats.spreadEff[t] ?? 0).toFixed(3)}%`,
     }
-  }, [priceData, positionData])
+  }, [currentTick, priceDataFull, positionDataFull, runningStats])
 
-  // Filter fills up to current tick
   const allFills = useMemo(() => (data?.fills ?? mockFills), [data])
   const fills = useMemo(() => {
     if (!data) return allFills
@@ -189,46 +201,45 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     return allFills.filter(f => f.timestamp <= tickOrigTs)
   }, [allFills, data, selectedProduct, currentTick])
 
-  const logs = useMemo(
-    () => (data?.logs ?? mockLogs),
-    [data],
-  )
+  // ── Context values ─────────────────────────────────────────────────
 
-  const value = useMemo<DashboardContextValue>(() => ({
-    data,
-    products,
-    selectedProduct,
-    setSelectedProduct,
-    currentTick,
-    setCurrentTick,
-    playing,
-    setPlaying,
-    totalTicks,
-    priceDataFull,
-    pnlDataFull,
-    positionDataFull,
-    orderBook,
-    stats,
-    productSummary,
-    marketDynamics,
-    fills,
-    logs,
-    loadLog,
-  }), [
-    data, products, selectedProduct, currentTick, playing, totalTicks,
-    priceDataFull, pnlDataFull, positionDataFull, orderBook, stats,
-    productSummary, marketDynamics, fills, logs, loadLog,
-  ])
+  const dataValue = useMemo<DataContextValue>(() => ({
+    data, products, selectedProduct, setSelectedProduct,
+    totalTicks, priceDataFull, pnlDataFull, positionDataFull,
+    logs, loadLog,
+  }), [data, products, selectedProduct, totalTicks, priceDataFull, pnlDataFull, positionDataFull, logs, loadLog])
+
+  const tickValue = useMemo<TickContextValue>(() => ({
+    currentTick, setCurrentTick, playing, setPlaying,
+    orderBook, stats, productSummary, marketDynamics, fills,
+  }), [currentTick, playing, orderBook, stats, productSummary, marketDynamics, fills])
 
   return (
-    <DashboardContext value={value}>
-      {children}
-    </DashboardContext>
+    <DataContext value={dataValue}>
+      <TickContext value={tickValue}>
+        {children}
+      </TickContext>
+    </DataContext>
   )
 }
 
-export function useDashboard() {
-  const ctx = useContext(DashboardContext)
-  if (!ctx) throw new Error("useDashboard must be used within DashboardProvider")
+// ── Hooks ────────────────────────────────────────────────────────────
+
+/** Stable data — only changes on data load or product switch. */
+export function useData() {
+  const ctx = useContext(DataContext)
+  if (!ctx) throw new Error("useData must be used within DashboardProvider")
   return ctx
+}
+
+/** Tick-frequency data — changes every tick during playback. */
+export function useTick() {
+  const ctx = useContext(TickContext)
+  if (!ctx) throw new Error("useTick must be used within DashboardProvider")
+  return ctx
+}
+
+/** Combined hook — subscribes to both contexts. Use useData() in charts to avoid tick re-renders. */
+export function useDashboard() {
+  return { ...useData(), ...useTick() }
 }
